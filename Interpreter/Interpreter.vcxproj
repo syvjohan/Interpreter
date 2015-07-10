@@ -66,21 +66,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Eval.cpp" />
-    <ClCompile Include="FOR.cpp" />
     <ClCompile Include="LET.cpp" />
     <ClCompile Include="Manager.cpp" />
     <ClCompile Include="Map.cpp" />
-    <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Scanner.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Eval.h" />
-    <ClInclude Include="FOR.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="LET.h" />
     <ClInclude Include="Manager.h" />
-    <ClInclude Include="Parser.h" />
     <ClInclude Include="Scanner.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
