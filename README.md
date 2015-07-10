@@ -9,8 +9,17 @@ END,
 GOTO,
 RANDOM (0 - 1),
 PI,
-IF
+IF,
+FOR,
+TO,
+NEXT,
+INT,
+DEC,
+STR
+
 
 Can calculate INT & FLOAT.
+typecast between INT -> FLOAT and the other way around.
 Supported datatypes are INT, FLOAT & STRING.
 Compare operatos are <, > and =.
+undefined datatypes is treated as an INT
