@@ -2,8 +2,13 @@
 
 Manager::Manager() {
 	lengthNestedForLoops = 0;
-	capacity = 10;
-	nestedForLoops = new std::string[capacity];
+	capacityFoorLoops = 10;
+	nestedForLoops = new std::string[capacityFoorLoops];
+
+	lengthfunctionHeap = 0;
+	capacityFunction = 10;
+	functionHeap = new std::vector<Function>[capacityFunction];
+	insideFunction = false;
 }
 
 Manager::~Manager()
@@ -11,7 +16,7 @@ Manager::~Manager()
 }
 
 void Manager::init() {
-	scanner.readFile("1.2Instructions.txt"); //code file to be read from!
+	scanner.readFile("1.3Instructions.txt"); //code file to be read from!
 
 	int len = scanner.length();
 	for (tableIndex = 0; tableIndex != len; tableIndex++) {
@@ -20,6 +25,10 @@ void Manager::init() {
 }
 
 void Manager::table(std::string keyword, std::string expression) {
+	if (insideFunction && keyword != "ENDDEF") {
+		return;
+	}
+
 	if (keyword == "PRINT") {
 		evalPRINT(expression);
 	}
@@ -54,6 +63,15 @@ void Manager::table(std::string keyword, std::string expression) {
 	}
 	else if (keyword == "DEC") {
 		evalLET(expression, 2);
+	} 
+	else if (keyword == "DEFINE") {
+		evalDEFINE(expression);
+	}
+	else if (keyword == "RETURN") {
+		evalRETURN(expression);
+	}
+	else if (keyword == "ENDDEF") {
+		evalENDDEF(expression);
 	}
 }
 
@@ -80,6 +98,11 @@ void Manager::evalPRINT(std::string &expression) {
 }
 
 void Manager::evalLET(std::string &expression) {
+	//check if rhs value is a function.
+	if (expression[expression.length() -1] == ')') {
+		doFunction(expression);
+	}
+
 	expression = exchangeVariableNameToValue(expression);
 	
 	LET *var = new LET(expression);
@@ -101,10 +124,10 @@ void Manager::evalLET(std::string &expression, int datatype) {
 
 			//Store variable on heap or stack
 			if (lengthNestedForLoops < 1) {
-				variablesHeap.push_back(*variable);
+				addVariable(*variable, 1);
 			}
 			else {
-				variablesStack.push_back(*variable);
+				addVariable(*variable, 2);
 			}
 
 			varExpression = "";
@@ -334,7 +357,7 @@ void Manager::evalFOR(std::string &expression) {
 		std::string incrementVar = "";
 		incrementVar.append(incrementVarName).append("=").append(incrementVarValue);
 		LET *var = new LET(incrementVar);
-		variablesStack.push_back(*var);
+		addVariable(*var, 2);
 		positionStackForScope = variablesStack.size(); //sets first variable position on stack i for loop.
 
 		//stop value.
@@ -399,7 +422,33 @@ void Manager::evalNEXT(std::string &variable) {
 		// incorrect syntax no increment variable has been added.
 	}
 }
-// sqr = 3*3 byter ut sqr mot ett värde.
+
+void Manager::evalDEFINE(std::string &expression) {
+	insideFunction = true;
+
+	Function *function = new Function(expression);
+	//get linenumber for header.
+	function->setLineNumberStart(std::stoi(scanner.getLinenumber(tableIndex)));
+
+	functionHeap->push_back(*function);
+	//++lengthfunctionHeap;
+}
+
+LET Manager::evalRETURN(std::string &expression) {
+	if (insideFunction) {
+		Function function = functionHeap->at(lengthfunctionHeap);
+		return function.getVariable(expression);
+	}
+}
+
+void Manager::evalENDDEF(std::string &expression) {
+	//get linenumber for end of function.
+	Function function = functionHeap->at(lengthfunctionHeap);
+	function.setLineNumberEnd(std::stoi(scanner.getLinenumber(tableIndex)));
+
+	insideFunction = false;
+}
+
 //Change variable name to variable value in string if variable name exist in expression.
 std::string Manager::exchangeVariableNameToValue(std::string expression) {
 	//if it is not a variable
@@ -485,15 +534,15 @@ void Manager::overwriteOldVariableValue(LET *newVar) {
 				variablesStack.erase(variablesStack.begin() + s);
 			}
 		}
-		variablesStack.push_back(*newVar);
+		addVariable(*newVar, 2);
 	}
 	else {
-		for (int h = 0; h != variablesHeap.size(); h++) {
+		for (int h = 0; h <= variablesHeap.size(); h++) {
 			if (newVar->getName() == variablesHeap.at(h).getName()) {
 				variablesHeap.erase(variablesHeap.begin() + h);
 			}
 		}
-		variablesHeap.push_back(*newVar);
+		addVariable(*newVar, 1);
 	}
 }
 
@@ -604,6 +653,73 @@ std::string Manager::getDatatypeAsString(int datatype) {
 void Manager::eraseVariablesFromStack() {
 	for (int i = variablesStack.size(); i != positionStackForScope; i--) {
 		variablesStack.pop_back();
+	}
+}
+
+void Manager::addVariable(LET variable, int memoryType) {
+	if (lengthNestedForLoops > 0) {
+		incrementNestedForLoops(variable.getName());
+	}
+	else if (insideFunction) {
+		Function function = functionHeap->at(lengthfunctionHeap);
+		function.addVariable(variable);
+	}
+	else if (!insideFunction && lengthNestedForLoops == 0) {
+		if (memoryType == 1) {
+			variablesHeap.push_back(variable);
+		}
+		else {
+			variablesStack.push_back(variable);
+		}
+	}
+}
+
+void Manager::doFunction(std::string &expression) {
+	//get function name.
+	size_t foundOpEqual = expression.find('=');
+	size_t foundOpenParanthes = expression.find('(');
+	size_t foundCloseParanthes = expression.find(')');
+	if (foundOpEqual != std::string::npos && foundOpenParanthes != std::string::npos &&
+		foundCloseParanthes != std::string::npos) {
+		std::string functionName = expression.substr(foundOpEqual + 1, foundOpenParanthes - foundOpEqual -1);
+
+		//search for function head.
+		for (int i = 0; i <= lengthfunctionHeap; i++) {
+			if (functionName == functionHeap->at(i).getFunctionName()) {
+				insideFunction = true;
+
+				//get parameters.
+				std::string arg = expression.substr(foundOpenParanthes +1, (foundCloseParanthes -1) - foundOpenParanthes);
+				//check if variable exist.
+				for (int k = 0; k != variablesHeap.size(); k++) {
+					if (arg == variablesHeap[k].getName()) {
+						//is datatype the same?
+						bool isSameType = false;
+						int datatype = variablesHeap[k].getDatatype();
+						bool isAlpha = std::regex_match(arg, std::regex("^[A-Za-z]+$"));
+						if (isAlpha && datatype == 3) {
+							isSameType = true;
+						}
+						else if (arg.find_first_not_of("0123456789") != std::string::npos  && datatype == 1) {
+							isSameType = true;
+						}
+						else if (arg.find_first_not_of('.') && datatype == 2) {
+							isSameType = true;
+						}
+						else {
+							//incorrect datatype
+						}
+
+						//insert new value.
+						functionHeap->at(i).
+						
+					}
+				}
+			}
+		}
+	}
+	else {
+		//syntax error!
 	}
 }
 

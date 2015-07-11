@@ -10,12 +10,12 @@ public:
 	~Map();
 
 	struct Pair {
-		int key;
+		int linenumber;
 		std::string value;
 	};
 
-	bool pushBack(int key, std::string value);
-	Pair getElementAt(int key);
+	bool pushBack(int linenumber, std::string value);
+	Pair getElementAt(int linenumber);
 	Pair* getAllElements();
 	int length();
 
@@ -25,6 +25,6 @@ private:
 	Pair *map;
 	
 
-	bool isKeyUnique(int key);
+	bool isLinenumberUnique(int key);
 	void rezise();
 };

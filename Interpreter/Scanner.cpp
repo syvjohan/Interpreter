@@ -1,13 +1,13 @@
 #include "Scanner.h"
 
 Scanner::Scanner() {
-	keywordsLength = 20;
+	keywordsLength = 16;
 	keywords[0] = "PRINT";
 	keywords[1] = "LET";
 	keywords[2] = "INPUT";
 	keywords[3] = "IF";
 	keywords[4] = "GOTO";
-	keywords[5] = "END";
+	keywords[5] = "ENDDEF";
 	keywords[6] = "FOR";
 	keywords[7] = "THEN";
 	keywords[8] = "TO";
@@ -15,6 +15,9 @@ Scanner::Scanner() {
 	keywords[10] = "INT";
 	keywords[11] = "STR";
 	keywords[12] = "DEC";
+	keywords[13] = "DEFINE";
+	keywords[14] = "END";
+	keywords[15] = "RETURN";
 }
 
 Scanner::~Scanner()
@@ -27,7 +30,7 @@ void Scanner::readFile(std::string path) {
 
 		for (std::string line = ""; getline(file, line);) {
 			int firstWhiteSpace = line.find_first_of(' ');
-			int key = stoi(line.substr(0, firstWhiteSpace));
+			int linenumber = stoi(line.substr(0, firstWhiteSpace));
 
 			std::string value = line.substr(firstWhiteSpace, line.length() - firstWhiteSpace);
 
@@ -48,7 +51,7 @@ void Scanner::readFile(std::string path) {
 
 			value = removeFirstAndLastWhitesspace(value);
 
-			map.pushBack(key, value);
+			map.pushBack(linenumber, value);
 		}
 	}
 }
@@ -141,12 +144,12 @@ std::pair<std::string, std::string> Scanner::getInstructionAt(int index) {
 }
 
 std::string Scanner::getLinenumber(int index) {
-	return std::to_string(map.getElementAt(index).key);
+	return std::to_string(map.getElementAt(index).linenumber);
 }
 
 int Scanner::getIndex(int linenumber) {
 	for (int i = 0; i != length(); i++) {
-		if (map.getElementAt(i).key == linenumber) {
+		if (map.getElementAt(i).linenumber == linenumber) {
 			return i;
 		}
 	}

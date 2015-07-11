@@ -7,6 +7,6 @@
 60 PRINT "Funktionstest"
 70 PRINT "Vilket tal ska vi kvadrera"
 80 INPUT in
-90 LET sq = sqr( x )
+90 LET sq = sqr( in )
 100 PRINT sq
 110 END

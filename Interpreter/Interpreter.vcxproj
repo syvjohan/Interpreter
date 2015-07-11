@@ -66,12 +66,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Function.cpp" />
     <ClCompile Include="LET.cpp" />
     <ClCompile Include="Manager.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Scanner.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Function.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="LET.h" />
     <ClInclude Include="Manager.h" />

@@ -18,13 +18,13 @@ Map::~Map() {
 	}
 }
 
-bool Map::pushBack(int key, std::string value) {
-	if ((key != NULL) && (value != "") && (isKeyUnique(key))) {
+bool Map::pushBack(int linenumber, std::string value) {
+	if ((linenumber != NULL) && (value != "") && (isLinenumberUnique(linenumber))) {
 		if (elementNumber + 1 == capacity) {
 			rezise();
 		}
 		Pair pair;
-		pair.key = key;
+		pair.linenumber = linenumber;
 		pair.value = value;
 		map[elementNumber] = pair;
 		++elementNumber;
@@ -34,11 +34,11 @@ bool Map::pushBack(int key, std::string value) {
 	return false;
 }
 
-Map::Pair Map::getElementAt(int key) {
+Map::Pair Map::getElementAt(int linenumber) {
 	if (elementNumber > 0) {		
 		Pair pair;
-		pair.key = map[key].key;
-		pair.value = map[key].value;
+		pair.value = map[linenumber].value;
+		pair.linenumber = map[linenumber].linenumber;
 
 		return pair;
 	}
@@ -48,7 +48,6 @@ Map::Pair* Map::getAllElements() {
 	Pair *container = new Pair[elementNumber];
 	for (int i = 0; i <= elementNumber; i++) {
 		Pair pair;
-		pair.key = map[i].key;
 		pair.value = map[i].value;
 		container[i] = pair;
 	}
@@ -70,9 +69,9 @@ int Map::length() {
 	return elementNumber;
 }
 
-bool Map::isKeyUnique(int key) {
+bool Map::isLinenumberUnique(int linenumber) {
 	for (int i = 0; i != capacity; i++) {
-		if (key == map[i].key)
+		if (linenumber == map[i].linenumber)
 			return false;
 	}
 

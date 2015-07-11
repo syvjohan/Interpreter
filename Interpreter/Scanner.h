@@ -26,7 +26,7 @@ private:
 	Map map;
 
 	int keywordsLength;
-	std::string keywords[20];
+	std::string keywords[16];
 
 	std::string trimString(std::string str);
 	std::string removeFirstAndLastWhitesspace(std::string &str);
