@@ -28,7 +28,7 @@ private:
 	int capacityFunction;
 	int lengthfunctionHeap;
 	bool insideFunction;
-
+	//weeeeeeeeeeeeeeeeeeeee!!!!!!!!
 	int tableIndex; 
 	int headLoopIndex;
 	int endLoopIndex;
