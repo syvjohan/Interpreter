@@ -67,13 +67,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Function.cpp" />
+    <ClCompile Include="Functions.cpp" />
     <ClCompile Include="LET.cpp" />
     <ClCompile Include="Manager.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="Scanner.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Defs.h" />
     <ClInclude Include="Function.h" />
+    <ClInclude Include="Functions.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="LET.h" />
     <ClInclude Include="Manager.h" />

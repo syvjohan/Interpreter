@@ -1,4 +1,5 @@
 #pragma once
+#include "Defs.h"
 
 #include <string>
 #include <iostream>

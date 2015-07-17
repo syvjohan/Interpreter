@@ -1,103 +1,127 @@
 #include "LET.h"
 
-LET::LET() {}
+LET::LET() {
+	data = DBG_NEW LetData();
+	initializeValues();
+}
 
-LET::LET(std::string &expression) {
+LET::LET(const std::string &expression) : LET() {
 	if (expression != "") {
 		identifyPartsInExpression(expression);
 		transformValueAfterDatatype();
 	}
 }
 
-LET::~LET() {}
-
-void LET::setName(std::string name) {
-	this->name = name;
+//copy constructor.
+LET::LET(const LET &obj) {
+	data = DBG_NEW LetData;
+	*data = *obj.data;
 }
 
-void LET::setValue(std::string value) {
-	this->parsedValue = value;
+LET::~LET() {
+	if (data != nullptr) {
+		delete data;
+		data = NULL;
+	}
 }
 
-void LET::setDataType(int datatype) {
+void LET::initializeValues() {
+	data = DBG_NEW LetData();
+
+	data->name = "";
+	data->parsedValue = "";
+	data->datatype = 0;
+}
+
+void LET::setName(const std::string &name) {
+	data->name = name;
+}
+
+void LET::setValue(const std::string &value) {
+	data->parsedValue = value;
+}
+
+void LET::setDataType(const int &datatype) {
 	if (datatype == 2) {
-		this->datatype = 2;
+		data->datatype = 2;
 	}
 	else if (datatype == 1) {
-		this->datatype = 1;
+		data->datatype = 1;
 	}
 	else if (datatype == 3) {
-		this->datatype = 3;
+		data->datatype = 3;
 	}
 	else {
-		this->datatype == 1;
+		data->datatype == 1;
 	}
 }
 
-std::string LET::getName() {
-	return this->name;
+std::string LET::getName() const {
+	return data->name;
 }
 
-std::string LET::getValue() {
-	return parsedValue;
+std::string LET::getValue() const {
+	return data->parsedValue;
 }
 
-int LET::getDatatype() {
-	return datatype;
+int LET::getDatatype() const {
+	return data->datatype;
 }
 
-void LET::identifyPartsInExpression(std::string &expression) {
-	for (int i = 0; i != expression.length(); i++) {
+void LET::identifyPartsInExpression(const std::string &expression) {
+	std::string expr = expression;
+	for (int i = 0; i != expr.length(); i++) {
 
 		//find datatype. DEFINED DATATYPES
 		bool hasDefinedDatatype = false;
-		size_t typeInt = expression.find("INT");
-		size_t typeFloat = expression.find("FLOAT");
-		size_t typeString = expression.find("STR");
+		size_t typeInt = expr.find("INT");
+		size_t typeFloat = expr.find("FLOAT");
+		size_t typeString = expr.find("STR");
+		int datatype = 0;
 		if (typeInt != std::string::npos) {
-			setDataType(1); //INT
-			expression.erase(typeInt, typeInt + 3);
+			setDataType(datatype = 1); //INT
+			expr.erase(typeInt, typeInt + 3);
 			hasDefinedDatatype = true;
 		}
 		else if (typeFloat != std::string::npos) {
-			setDataType(2); //FLOAT
-			expression.erase(typeFloat, typeFloat + 5);
+			setDataType(datatype = 2); //FLOAT
+			expr.erase(typeFloat, typeFloat + 5);
 			hasDefinedDatatype = true;
 		}
 		else if (typeString != std::string::npos) {
-			setDataType(3); //STRING
-			expression.erase(typeString, typeString + 3);
+			setDataType(datatype = 3); //STRING
+			expr.erase(typeString, typeString + 3);
 			hasDefinedDatatype = true;
 		}
 		else {
-			setDataType(1); //INT
+			setDataType(datatype = 1); //INT
 		}
 
 		//find name.
-		size_t opEqual = expression.find_first_of('=');
+		size_t opEqual = expr.find_first_of('=');
 		if (opEqual != std::string::npos) {
-			setName(expression.substr(0, opEqual));
-			expression.erase(0, opEqual + 1);
+			setName(expr.substr(0, opEqual));
+			expr.erase(0, opEqual + 1);
 		}
 		else {
-			setName(expression);
+			setName(expr);
 		}
 
 		//find value and find UNDEFINED DATATYPES.
-		if (opEqual != std::string::npos && opEqual + 1 != expression.length()) {
-			size_t isFloat = expression.find_first_not_of(".");
-			bool isAlpha = std::regex_match(expression, std::regex("^[A-Za-z]+$"));
+		if (opEqual != std::string::npos && opEqual + 1 != expr.length()) {
+			size_t isFloat = expr.find_first_not_of(".");
+			bool isAlpha = std::regex_match(expr, std::regex("^[A-Za-z]+$"));
 			if (isFloat && !hasDefinedDatatype) {
-				setDataType(2); //FLOAT
+				setDataType(datatype = 2); //FLOAT
 			}
 			else if (isAlpha && !hasDefinedDatatype) {
-				setDataType(3); //STRING
+				setDataType(datatype = 3); //STRING
 			}
 
-			expression = transformKeywordsToValues(expression);
-			expression = subdivideValue(expression);
-			if (expression != "") { 
-				setValue(expression); 
+			expr = transformKeywordsToValues(expr);
+			expr = subdivideValue(expr);
+			if (expr != "") {
+				setValue(expr);
 			}
 			else {
 				//Syntax wrong in expression.
@@ -112,21 +136,22 @@ void LET::identifyPartsInExpression(std::string &expression) {
 	}
 }
 
-std::string& LET::subdivideValue(std::string &expression) {	
+std::string LET::subdivideValue(const std::string &expression) {	
+	std::string expr = expression;
 	std::string subExpression = "";
-	int nextOp = expression.length();
+	int nextOp = expr.length();
 	std::string restInsideParanthes = "";
 
-	size_t openParanthes = expression.find_first_of('(');
-	size_t closeParanthes = expression.find_first_of(')');
+	size_t openParanthes = expr.find_first_of('(');
+	size_t closeParanthes = expr.find_first_of(')');
 	//Matching paranthesis
 	if (openParanthes != std::string::npos && closeParanthes != std::string::npos) {
-		subExpression = expression.substr(openParanthes + 1, (closeParanthes - 1) - openParanthes);
+		subExpression = expr.substr(openParanthes + 1, (closeParanthes - 1) - openParanthes);
 
 		std::string restAfterParanthesis = "";
 		// check if there is some char after close paranthes.
 		if (subExpression.length() != closeParanthes) {
-			restAfterParanthesis = expression.substr(closeParanthes + 1, expression.length() - closeParanthes); 
+			restAfterParanthesis = expr.substr(closeParanthes + 1, expr.length() - closeParanthes);
 		}
 		
 		//check number of operators.
@@ -169,58 +194,58 @@ std::string& LET::subdivideValue(std::string &expression) {
 				std::string tmpResult = std::to_string(result);
 
 				// create the new expression.
-				expression = "";
-				expression.append(tmpResult);
-				expression.append(restInsideParanthes);
-				expression.append(restAfterParanthesis);
+				expr = "";
+				expr.append(tmpResult);
+				expr.append(restInsideParanthes);
+				expr.append(restAfterParanthesis);
 				if (countOp > 1) {
-					expression.insert(tmpResult.length() + restInsideParanthes.length(), ")");
-					expression.insert(0, "(");
+					expr.insert(tmpResult.length() + restInsideParanthes.length(), ")");
+					expr.insert(0, "(");
 				}
 
-				return subdivideValue(expression);
+				return subdivideValue(expr);
 			}
 		}
 	}
 	//Missing parantheses!
 	else if (openParanthes == std::string::npos && closeParanthes == std::string::npos) {
-		for (int k = 0; k != expression.length(); k++) {
-			if (isOperator(expression[k])) {
+		for (int k = 0; k != expr.length(); k++) {
+			if (isOperator(expr[k])) {
 
 				//find next operator.
-				for (int n = k + 1; n != expression.length(); n++) {
-					if (isOperator(expression[n])) {
+				for (int n = k + 1; n != expr.length(); n++) {
+					if (isOperator(expr[n])) {
 						nextOp = n;
 					}
 				}
 
 				//find right value.
 				size_t v1 = nextOp;
-				std::string rhs = expression.substr(k + 1, v1 - k);
+				std::string rhs = expr.substr(k + 1, v1 - k);
 				float rNumber = atof(rhs.c_str());
 
 				//find left value.
-				std::string lhs = expression.substr(0, k);
+				std::string lhs = expr.substr(0, k);
 				float lNumber = atof(lhs.c_str());
 
 				// find rest.
-				if (nextOp != expression.length()) {
-					restInsideParanthes = expression.substr(nextOp - 1, expression.length() - nextOp + 1);
+				if (nextOp != expr.length()) {
+					restInsideParanthes = expr.substr(nextOp - 1, expr.length() - nextOp + 1);
 				}
 					
 				//calculate the values
-				float result = doCalc(lNumber, validateOperator(expression.at(k)), rNumber);
+				float result = doCalc(lNumber, validateOperator(expr.at(k)), rNumber);
 				std::string tmpResult = std::to_string(result);
 
 				// create the new expression.
-				expression = "";
-				expression.append(tmpResult);
-				expression.append(restInsideParanthes);
+				expr = "";
+				expr.append(tmpResult);
+				expr.append(restInsideParanthes);
 
 				//Check if there is more to calculate.
-				for (int op = 0; op != expression.length(); op++) {
-					if (isOperator(expression[op])) {
-						subdivideValue(expression);
+				for (int op = 0; op != expr.length(); op++) {
+					if (isOperator(expr[op])) {
+						subdivideValue(expr);
 					}
 				}
 				break;
@@ -232,7 +257,7 @@ std::string& LET::subdivideValue(std::string &expression) {
 	}
 
 	 //Invalid expression
-	 return expression;
+	return expr;
 }
 
 char LET::validateOperator(char op) {
@@ -298,35 +323,39 @@ bool LET::isNumber(const std::string str) {
 }
 
 //Exchange words to values, ex: PI, RANDOM.
-std::string LET::transformKeywordsToValues(std::string &str) {
+std::string LET::transformKeywordsToValues(const std::string &str) {
+	std::string expr = str;
+
+	bool onlyDigits = isNumber(expr);
+	if (onlyDigits == true) { return expr; };
 
 	size_t foundRandom = str.find("RANDOM");
 	if (foundRandom != std::string::npos) {
 		std::string random = std::to_string(generateRandomNumber());
-		str.erase(foundRandom, 6);
-		str.insert(foundRandom, random);
+		expr.erase(foundRandom, 6);
+		expr.insert(foundRandom, random);
 	}
 
 	size_t foundPI = str.find("PI");
 	if(foundPI != std::string::npos) {
 		std::string pi = std::to_string(3.14159265359);
-		str.erase(foundPI, 2);
-		str.insert(foundPI, pi);
+		expr.erase(foundPI, 2);
+		expr.insert(foundPI, pi);
 	}
 	
-	return str;
+	return expr;
 }
 
 void LET::setDefaultValue() {
 	std::string value = "";
-	if (datatype == 1) {
+	if (data->datatype == 1) {
 		setValue(value = "0");
 	}
-	else if (datatype == 2) {
+	else if (data->datatype == 2) {
 		setValue(value = "0.0f");
 	}
-	else if (datatype == 3) {
-		setValue("");
+	else if (data->datatype == 3) {
+		setValue(value = "");
 	}
 }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Map.h"
+#include "Defs.h"
 
 #include <fstream>
 #include <string>

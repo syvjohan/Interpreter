@@ -1,38 +1,69 @@
 #pragma once
 
 #include "LET.h"
+#include "Defs.h"
 
 #include <string>
 
 class Function
 {
 public:
-	Function(std::string &expression);
+	Function(std::string expression);
+	Function(const Function &obj);
 	Function();
 	~Function();
+	void identifyPartsInHead(const std::string &expression);
 
-	void addVariable(LET variable);
-	LET getVariable(std::string name);
-	void setLineNumberStart(int start);
-	void setLineNumberEnd(int end);
-	std::string getFunctionName();
-	void setFunctionName(std::string name);
+	bool addVariable(const std::string &name, const std::string &value, const int &datatype);
+	bool addArg(const std::string &name, const std::string &value, const int &datatype);
+
+	void setFunctionName(const std::string &name);
+
+	void setArgValue(const std::string value);
+
+	void setLineNumberStart(const int start);
+	void setLineNumberEnd(const int end);
+	void setCallingPoint(const std::string &linenumber);
+
+	void setReturnValue(const std::string &value);
+
+	std::string getFunctionName() const;
+
+	LET getVariableByName(const std::string &name);
+
+	std::string getLinenumberStart() const;
+	std::string getLinenumberEnd() const;
+	std::string getCallingPoint() const;
+
+	std::string getReturnValue() const;
+
+	void removeVariable(const LET &variable);
+	int doVarExist(std::string name, LET *container, int size);
+	Function& emptyBody(Function &function);
 
 private:
-	std::string functionName;
+	struct FunctionData
+	{
+		std::string functionName;
 
-	LET *variables;
-	int variablesLen;
+		LET *varContainer;
+		int varLen;
+		int varCapacity;
 
-	LET *argsContainer;
-	int argsLen;
+		LET *argsContainer;
+		int argsLen;
+		int argsCapacity;
 
-	std::string datatypes[3];
-	int datatypesLen;
+		std::string datatypes[3];
+		int datatypesLen;
 
-	int linenumberStart;
-	int linenumberEnd;
+		int linenumberStart;
+		int linenumberEnd;
+		std::string callingPoint;
+		std::string returnValue;
 
-	void identifyPartsInExpression(std::string &expression);
+	}*data;
+
+	void initializeValues();
 };
 

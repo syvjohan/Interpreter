@@ -8,7 +8,8 @@
 
 #include "Scanner.h"
 #include "LET.h"
-#include "Function.h"
+#include "Functions.h"
+#include "Defs.h"
 
 class Manager
 {
@@ -24,11 +25,12 @@ private:
 	std::vector<LET> variablesStack;
 	int positionStackForScope;
 
-	std::vector<Function> *functionHeap;
-	int capacityFunction;
-	int lengthfunctionHeap;
+	Functions *functions;
+	Function *function;
+
 	bool insideFunction;
-	//weeeeeeeeeeeeeeeeeeeee!!!!!!!!
+	bool readLines;
+
 	int tableIndex; 
 	int headLoopIndex;
 	int endLoopIndex;
@@ -37,32 +39,34 @@ private:
 	int lengthNestedForLoops;
 	int capacityFoorLoops;
 
-	//Help functions.
-	std::string exchangeVariableNameToValue(std::string expression);
-	void overwriteOldVariableValue(LET *newVar);
-	size_t getCompareOperatorPos(std::string *expression);
-	size_t getOperatorPos(std::string *expression);
-	std::string getDatatypeAsString(int datatype);
-	void incrementNestedForLoops(std::string &variableName);
+	std::string callingPoint;
+
+	//Help Functions.
+	std::string exchangeVariableNameToValue(const std::string expression);
+	void overwriteOldVariableValue(const LET *newVar);
+	size_t getCompareOperatorPos(const std::string *expression);
+	size_t getOperatorPos(const std::string *expression);
+	std::string getDatatypeAsString(const int datatype);
+	void incrementNestedForLoops(const std::string &variableName);
 	void decrementNestedForLoops();
 	void gotoLoopHead();
 	void endLoop();
 	void eraseVariablesFromStack();
-	void addVariable(LET variable, int memoryType);
-	void doFunction(std::string &expression);
-	void table(std::string keyword, std::string expression);
+	void addVariable(const LET &variable, const int memoryType);
+	void doFunction(const std::string &expression);
+	void table(const std::string keyword, const std::string expression);
 
 	//Evaluation
-	void evalPRINT(std::string &expression);
-	void evalINPUT(std::string &expression);
-	void evalLET(std::string &expression);
-	void evalLET(std::string &expression, int datatype);
-	void evalIF(std::string &expression);
-	void evalGOTO(std::string &expression);
-	void evalFOR(std::string &expression);
-	void evalNEXT(std::string &expression);
-	void evalDEFINE(std::string &expression);
-	LET evalRETURN(std::string &expression);
-	void evalENDDEF(std::string &expression);
+	void evalPRINT(const std::string &expression);
+	void evalINPUT(const std::string &expression);
+	void evalLET(const std::string &expression);
+	void evalLET(const std::string &expression, const int datatype);
+	void evalIF(const std::string &expression);
+	void evalGOTO(const std::string &expression);
+	void evalFOR(const std::string &expression);
+	void evalNEXT(const std::string &expression);
+	void evalDEFINE(const std::string &expression);
+	void evalRETURN(const std::string &expression);
+	void evalENDDEF();
 };
 
