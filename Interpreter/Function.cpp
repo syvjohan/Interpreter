@@ -155,18 +155,20 @@ int Function::doVarExist(std::string name, LET *container, int size) {
 
 LET Function::getVariableByName(const std::string &name) {
 	LET variable;
-	for (int i = 0; i != data->varLen; i++) {
-		if (data->varContainer[i].getName() == name) {
-			return data->varContainer[i];
+	if (data != nullptr) {
+		for (int i = 0; i != data->varLen; i++) {
+			if (data->varContainer[i].getName() == name) {
+				return data->varContainer[i];
+			}
+		}
+
+		for (int i = 0; i != data->argsLen; i++) {
+			if (data->argsContainer->getName() == name) {
+				return data->argsContainer[i];
+			}
 		}
 	}
 
-	for (int i = 0; i != data->argsLen; i++) {
-		if (data->argsContainer->getName() == name) {
-			return data->argsContainer[i];
-		}
-	}
-	
 	//trying to get a none existing variable!
 	return variable;
 }

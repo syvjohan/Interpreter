@@ -69,6 +69,7 @@ int LET::getDatatype() const {
 
 void LET::identifyPartsInExpression(const std::string &expression) {
 	std::string expr = expression;
+	expr = trimString(expr);
 	for (int i = 0; i != expr.length(); i++) {
 
 		//find datatype. DEFINED DATATYPES
@@ -369,4 +370,15 @@ void LET::transformValueAfterDatatype() {
 			setValue(value.substr(0, findDot + 4));
 		}
 	}
+}
+
+std::string LET::trimString(std::string &str) {
+	std::string tmp = "";
+	for (int i = 0; i != str.length(); i++) {
+		if (str.at(i) != ' ' && str.at(i) != '\t' && str.at(i) != '\n' && str.at(i) != '\v' && str.at(i) != '\"') {
+			tmp += str.at(i);
+		}
+	}
+	str = tmp;
+	return str;
 }

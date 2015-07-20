@@ -40,6 +40,7 @@ private:
 
 	std::string subdivideValue(const std::string &expression);
 	void setDefaultValue();
+	std::string trimString(std::string &str);
 
 	int validateOperatorType(char op);
 	bool isParanthesis(char op);

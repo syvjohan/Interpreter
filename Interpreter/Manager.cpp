@@ -259,14 +259,12 @@ void Manager::evalIF(const std::string &expression) {
 
 		//If it is text
 		if (isAlpha) {
-			//newExpression.append("tmp");
 			newExpression.append("=");
 			newExpression.append(value);
 			tmp = DBG_NEW LET(newExpression);
 		}
 		//if it is a number.
 		else if (isNumber != std::string::npos) {
-			//newExpression.append("tmp");
 			newExpression.append(value);
 			tmp = DBG_NEW LET(newExpression);
 		}
@@ -499,6 +497,7 @@ void Manager::evalENDDEF() {
 //Change variable name to variable value in string if variable name exist in expression.
 std::string Manager::exchangeVariableNameToValue(const std::string expression) {
 	std::string expr = expression;
+
 	//if it is not a variable
 	size_t foundStr = expr.find_first_of('"');
 	if (foundStr != std::string::npos) {
@@ -525,73 +524,128 @@ std::string Manager::exchangeVariableNameToValue(const std::string expression) {
 			std::string lhsValue = "";
 			std::string op = "";
 			std::string rhs = "";
+			std::string paranthes = "";
 			if (foundOperator != std::string::npos) {
 				lhs = expr.substr(0, foundOperator);
+
+				// check for typecast datatype.
+				size_t typeInt = lhs.find("INT");
+				size_t typeFloat = lhs.find("FLOAT");
+				size_t typeString = lhs.find("STR");
+				std::string typecast = "";
+				if (typeInt != std::string::npos) {
+					typecast = lhs.substr(typeInt, 3);
+					lhs.erase(typeInt, 3);
+				}
+				else if (typeString != std::string::npos) {
+					typecast = lhs.substr(typeString, 3);
+					lhs.erase(typeInt, 3);
+				}
+				else if (typeFloat != std::string::npos) {
+					typecast = lhs.substr(typeFloat, 5);
+					lhs.erase(typeFloat, 5);
+				}
+
+				//if lhs contains operators remove them.
+				size_t foundOperatorLhs = getOperatorPos(&lhs);
+				if (foundOperatorLhs != std::string::npos) {
+					paranthes = lhs.substr(foundOperatorLhs, 1);
+					if (paranthes != ")" && paranthes != "(") {
+						paranthes = "";
+					}
+					lhs.erase(foundOperatorLhs, 1);
+				}
+
 				op = expr.substr(foundOperator, 1);
 				rhs = expr.substr(foundOperator + 1, expr.length() - foundOperator);
 
-				if (lengthNestedForLoops > 0) {
-					//exchange name to value. STACK!
-					for (int k = 0; k != variablesStack.size(); k++) {
-						if (lhs == variablesStack[k].getName()) {
-							lhsValue = variablesStack[k].getValue();
-							break;
+				if (lhs != "") {
+					if (lengthNestedForLoops > 0) {
+						//exchange name to value. STACK!
+						for (int k = 0; k != variablesStack.size(); k++) {
+							if (lhs == variablesStack[k].getName()) {
+								lhsValue = variablesStack[k].getValue();
+								break;
+							}
 						}
+					}
+					else {
+						//exchange name to value. HEAP!
+						for (int k = 0; k != variablesHeap.size(); k++) {
+							if (lhs == variablesHeap[k].getName()) {
+								lhsValue = variablesHeap[k].getValue();
+								break;
+							}
+						}
+					}
+
+					//if no stored variable was found
+					if (lhsValue == "") {
 						lhsValue = lhs;
 					}
-				}
-				else {
-					//exchange name to value. HEAP!
-					for (int k = 0; k != variablesHeap.size(); k++) {
-						if (lhs == variablesHeap[k].getName()) {
-							lhsValue = variablesHeap[k].getValue();
-							break;
+
+					//exchange name to value. LOCAL VARIABLE
+					if (lhs == lhsValue && function != nullptr) {
+						LET tmp = function->getVariableByName(lhs);
+						if (lhs == tmp.getName()) {
+							lhsValue = tmp.getValue();
 						}
-						lhsValue = lhs;
 					}
-				} 			
 
-				//exchange name to value. LOCAL VARIABLE
-				if (lhs == lhsValue) {
-					LET tmp = function->getVariableByName(lhs);
-					if (lhs == tmp.getName()) {
-						lhsValue = tmp.getValue();
+					//if there was a paranthes in lhs put it back.
+					if (foundOperatorLhs != std::string::npos && paranthes != "") {
+						lhsValue.insert(foundOperatorLhs, paranthes);
 					}
+
+					tmp.append(typecast);
+					tmp.append(lhsValue);
+					tmp.append(op);
 				}
-				
-				tmp.append(lhsValue);
-				tmp.append(op);
 
-				expr.erase(0, lhs.length() + op.length());
+				expr.erase(0, lhs.length() + typecast.length() + op.length());
 			}
 		}
+
 		//only one value
 		if (expr.length() != 0) {
-			//change name to value, HEAP
-			//if (lengthNestedForLoops > 0) {
-				//change name to value, STACK
-				for (int k = 0; k != variablesStack.size(); k++) {
-					if (expr == variablesStack[k].getName()) {
-						expr = variablesStack[k].getValue();
-						break;
-					}
+			std::string paranthes = "";
+			size_t foundOperatorLhs = getOperatorPos(&expr);
+			if (foundOperatorLhs != std::string::npos) {
+				paranthes = expr.substr(foundOperatorLhs, 1);
+				if (paranthes != ")" && paranthes != "(") {
+					paranthes = "";
 				}
-			//}
-			//else {
-				for (int k = 0; k != variablesHeap.size(); k++) {
-					if (expr == variablesHeap[k].getName()) {
-						expr = variablesHeap[k].getValue();
-						break;
-					}
-				}
+				expr.erase(foundOperatorLhs, 1);
+			}
 
-				if (insideFunction) {
-					LET letTmp = function->getVariableByName(expr);
-					if (expr == letTmp.getName()) {
-						expr = letTmp.getValue();
-					}
+			//change name to value, STACK
+			for (int k = 0; k != variablesStack.size(); k++) {
+				if (expr == variablesStack[k].getName()) {
+					expr = variablesStack[k].getValue();
+					break;
 				}
-			//}
+			}
+
+			//change name to value, HEAP
+			for (int k = 0; k != variablesHeap.size(); k++) {
+				if (expr == variablesHeap[k].getName()) {
+					expr = variablesHeap[k].getValue();
+					break;
+				}
+			}
+
+			if (insideFunction) {
+				LET letTmp = function->getVariableByName(expr);
+				if (expr == letTmp.getName()) {
+					expr = letTmp.getValue();
+				}
+			}
+
+			//if there was a paranthes in lhs put it back.
+			if (foundOperatorLhs != std::string::npos && paranthes != "") {
+				expr.insert(foundOperatorLhs, paranthes);
+			}
+
 			tmp.append(expr);
 			expr.erase(0, expr.length());
 		}
@@ -607,7 +661,7 @@ void Manager::overwriteOldVariable(const LET newVar) {
 		for (int s = 0; s != variablesStack.size(); s++) {
 			if (newVar.getName() == variablesStack.at(s).getName()) {
 				std::swap(variablesStack[s], variablesStack.back());
-				variablesStack.pop_back(); //variablesStack.erase(variablesStack.begin() + s);
+				variablesStack.pop_back();
 				break;
 			}
 		}
