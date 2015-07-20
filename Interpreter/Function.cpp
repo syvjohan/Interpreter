@@ -48,11 +48,6 @@ Function::~Function()
 		delete data;
 		data = NULL;
 	}
-
-	if (data != nullptr) {
-		delete data;
-		data = NULL;
-	}
 }
 
 void Function::identifyPartsInHead(const std::string &expression) {

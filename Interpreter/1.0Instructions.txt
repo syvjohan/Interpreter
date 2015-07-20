@@ -1,5 +1,5 @@
 10 PRINT "Valkommen till Gissa Tal"
-20 LET tal = FLOAT ( RANDOM * 100 ) + 1
+20 LET tal = 1
 30 LET antal = 0
 40 PRINT "Jag tanker pa ett tal mellan 1 och 100"
 50 PRINT "Gissa talet?"

@@ -1,7 +1,6 @@
 #include "LET.h"
 
 LET::LET() {
-	data = DBG_NEW LetData();
 	initializeValues();
 }
 
@@ -20,8 +19,8 @@ LET::LET(const LET &obj) {
 
 LET::~LET() {
 	if (data != nullptr) {
-		delete data;
-		data = NULL;
+		//delete data;
+		//data = NULL;
 	}
 }
 
@@ -80,17 +79,17 @@ void LET::identifyPartsInExpression(const std::string &expression) {
 		int datatype = 0;
 		if (typeInt != std::string::npos) {
 			setDataType(datatype = 1); //INT
-			expr.erase(typeInt, typeInt + 3);
+			expr.erase(typeInt, 3);
 			hasDefinedDatatype = true;
 		}
 		else if (typeFloat != std::string::npos) {
 			setDataType(datatype = 2); //FLOAT
-			expr.erase(typeFloat, typeFloat + 5);
+			expr.erase(typeFloat, 5);
 			hasDefinedDatatype = true;
 		}
 		else if (typeString != std::string::npos) {
 			setDataType(datatype = 3); //STRING
-			expr.erase(typeString, typeString + 3);
+			expr.erase(typeString, 3);
 			hasDefinedDatatype = true;
 		}
 		else {
@@ -367,7 +366,7 @@ void LET::transformValueAfterDatatype() {
 			setValue(value.substr(0, findDot));
 		}
 		else if (getDatatype() == 2) {
-			setValue(value.substr(0, findDot + 2));
+			setValue(value.substr(0, findDot + 4));
 		}
 	}
 }

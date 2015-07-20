@@ -43,7 +43,7 @@ private:
 
 	//Help Functions.
 	std::string exchangeVariableNameToValue(const std::string expression);
-	void overwriteOldVariableValue(const LET *newVar);
+	void overwriteOldVariable(const LET newVar);
 	size_t getCompareOperatorPos(const std::string *expression);
 	size_t getOperatorPos(const std::string *expression);
 	std::string getDatatypeAsString(const int datatype);
@@ -53,6 +53,7 @@ private:
 	void endLoop();
 	void eraseVariablesFromStack();
 	void addVariable(const LET &variable, const int memoryType);
+	bool isAFunction(const std::string expression);
 	void doFunction(const std::string &expression);
 	void table(const std::string keyword, const std::string expression);
 
