@@ -2,6 +2,7 @@
 
 #include "Map.h"
 #include "Defs.h"
+#include "ErrorHandler.h"
 
 #include <fstream>
 #include <string>
@@ -11,9 +12,10 @@
 class Scanner {
 public:
 	Scanner();
+	Scanner(const ErrorHandler &errHandler);
 	~Scanner();
-
-	void readFile(std::string path);
+	
+	void readFile(const std::string path);
 
 	std::string getkeyword(std::string str);
 	std::string getLinenumber(int index);
@@ -25,6 +27,7 @@ public:
 
 private:
 	Map map;
+	ErrorHandler errHandler;
 
 	int keywordsLength;
 	std::string keywords[16];

@@ -11,6 +11,10 @@ LET::LET(const std::string &expression) : LET() {
 	}
 }
 
+LET::LET(const ErrorHandler &errHandler) {
+	this->errHandler = errHandler;
+}
+
 //copy constructor.
 LET::LET(const LET &obj) {
 	data = DBG_NEW LetData;
@@ -33,6 +37,7 @@ void LET::initializeValues() {
 }
 
 void LET::setName(const std::string &name) {
+	if (name == "") return errHandler.updateLog("ERROR: 016");
 	data->name = name;
 }
 
@@ -125,6 +130,7 @@ void LET::identifyPartsInExpression(const std::string &expression) {
 			}
 			else {
 				//Syntax wrong in expression.
+				errHandler.updateLog("ERROR: 018");
 			}
 		}
 		else {
@@ -140,120 +146,170 @@ std::string LET::subdivideValue(const std::string &expression) {
 	std::string expr = expression;
 	std::string subExpression = "";
 	int nextOp = expr.length();
-	std::string restInsideParanthes = "";
+	int beforeOp = 0;
+	std::string restRight = "";
+	std::string restLeft = "";
 
 	size_t openParanthes = expr.find_first_of('(');
 	size_t closeParanthes = expr.find_first_of(')');
 	//Matching paranthesis
 	if (openParanthes != std::string::npos && closeParanthes != std::string::npos) {
-		subExpression = expr.substr(openParanthes + 1, (closeParanthes - 1) - openParanthes);
-
 		std::string restAfterParanthesis = "";
+		std::string restBeforeParanthesis = "";
+
 		// check if there is some char after close paranthes.
-		if (subExpression.length() != closeParanthes) {
+		if (expr.length() != closeParanthes) {
 			restAfterParanthesis = expr.substr(closeParanthes + 1, expr.length() - closeParanthes);
 		}
 		
-		//check number of operators.
-		int countOp = 0;
-		for (int op = 0; op != subExpression.length(); op++) {
-			if (isOperator(subExpression[op])) {
-				++countOp;
-			}
+		//check if there is some char before open paranthes.
+		if (expr[0] != openParanthes) {
+			restBeforeParanthesis = expr.substr(0, openParanthes);
 		}
 
-		for (int k = 0; k != subExpression.length(); k++) {
-			if (isOperator(subExpression[k])) {
-
-				//find next operator.
-				for (int n = k + 1; n != subExpression.length(); n++) {
-					if (isOperator(subExpression[n])) {
-						nextOp = n;
-						break;
+		int priorities = 1;
+		while (priorities != 3 || priorities < 0) {
+			for (int k = openParanthes; k != expr.length(); k++) {
+ 				if (prioritiesOperator(expr[k], priorities)) {
+					//find next operator.
+					for (int n = k + 1; n != expr.length(); n++) {
+						if (isOperator(expr[n]) || isParanthesis(expr[n])) {
+							nextOp = n;
+							break;
+						}
 					}
 
-					nextOp = subExpression.length();
+					//find before operator
+					for (int b = k - 1; b != 0; b--) {
+						if (isOperator(expr[b]) || isParanthesis(expr[b])) {
+							beforeOp = b;
+							break;
+						}
+					}
+
+					//find right value.
+					std::string rhs = expr.substr(k +1, nextOp - k -1);
+					float rNumber = atof(rhs.c_str());
+
+					//find left value.
+					std::string lhs = expr.substr(beforeOp +1, k - beforeOp -1);
+					float lNumber = atof(lhs.c_str());
+
+					// find rest right.
+					if (closeParanthes == nextOp) {
+						restRight = "";
+					}
+					else if (nextOp != expr.length()) {
+						restRight = expr.substr(nextOp, expr.length() - nextOp -1);
+					}
+
+					//find rest left
+					if (openParanthes == beforeOp) {
+						restLeft = "";
+					}
+					else if (beforeOp != 0) {
+						restLeft = expr.substr(openParanthes +1, beforeOp - openParanthes);
+					}
+					else {
+						restLeft = expr.substr(openParanthes, beforeOp);
+					}
+
+					//calculate the values
+					float result = doCalc(lNumber, validateOperator(expr.at(k)), rNumber);
+					std::string tmpResult = std::to_string(result);
+
+					// create the new expression.
+					expr = "";
+					expr.append(restBeforeParanthesis);
+					expr.append(restLeft);
+					expr.append(tmpResult);
+					expr.append(restRight);
+					expr.append(restAfterParanthesis);
+
+					if (expr == "") {
+						errHandler.updateLog("ERROR: 019");
+					}
+
+					return subdivideValue(expr);
 				}
-
-				//find right value.
-				size_t v1 = subExpression.length();
-				std::string rhs = subExpression.substr(k + 1, v1 - k);
-				float rNumber = atof(rhs.c_str());
-
-				//find left value.
-				std::string lhs = subExpression.substr(0, k);
-				float lNumber = atof(lhs.c_str());
-
-				// find rest.
-				if (nextOp != subExpression.length()) {
-					restInsideParanthes = subExpression.substr(nextOp, subExpression.length() - nextOp + 1);
-				}
-
-				//calculate the values
-				float result = doCalc(lNumber, validateOperator(subExpression.at(k)), rNumber);
-				std::string tmpResult = std::to_string(result);
-
-				// create the new expression.
-				expr = "";
-				expr.append(tmpResult);
-				expr.append(restInsideParanthes);
-				expr.append(restAfterParanthesis);
-				if (countOp > 1) {
-					expr.insert(tmpResult.length() + restInsideParanthes.length(), ")");
-					expr.insert(0, "(");
-				}
-
-				return subdivideValue(expr);
 			}
+			--priorities;
 		}
 	}
 	//Missing parantheses!
 	else if (openParanthes == std::string::npos && closeParanthes == std::string::npos) {
-		for (int k = 0; k != expr.length(); k++) {
-			if (isOperator(expr[k])) {
+		int priorities = 1;
+		while (priorities != 3) {
+			for (int k = 0; k != expr.length(); k++) {
+				if (prioritiesOperator(expr[k], priorities)) {
 
-				//find next operator.
-				for (int n = k + 1; n != expr.length(); n++) {
-					if (isOperator(expr[n])) {
-						nextOp = n;
+					//find next operator.
+					for (int n = k + 1; n != expr.length(); n++) {
+						if (isOperator(expr[n])) {
+							nextOp = n;
+							break;
+						}
 					}
-				}
 
-				//find right value.
-				size_t v1 = nextOp;
-				std::string rhs = expr.substr(k + 1, v1 - k);
-				float rNumber = atof(rhs.c_str());
+					//find before operator
+					for (int b = k -1; b != 0; b--) {
+						if (isOperator(expr[b])) {
+							beforeOp = b;
+							break;
+						}
+					}
 
-				//find left value.
-				std::string lhs = expr.substr(0, k);
-				float lNumber = atof(lhs.c_str());
+					//find right value.
+					int v1 = nextOp;
+					std::string rhs = expr.substr(k + 1, v1 - k -1);
+					float rNumber = atof(rhs.c_str());
 
-				// find rest.
-				if (nextOp != expr.length()) {
-					restInsideParanthes = expr.substr(nextOp - 1, expr.length() - nextOp + 1);
-				}
+					//find left value.
+					std::string lhs = expr.substr(beforeOp, k - beforeOp);
+					float lNumber = atof(lhs.c_str());
+
+					// find rest right.
+					if (nextOp != expr.length()) {
+						restRight = expr.substr(nextOp - 1, expr.length() - nextOp + 1);
+					}
+
+					//find rest left
+					if (beforeOp != 0) {
+						restLeft = expr.substr(0, beforeOp +1);
+					}
+					else {
+						restLeft = expr.substr(0, beforeOp);
+					}
 					
-				//calculate the values
-				float result = doCalc(lNumber, validateOperator(expr.at(k)), rNumber);
-				std::string tmpResult = std::to_string(result);
 
-				// create the new expression.
-				expr = "";
-				expr.append(tmpResult);
-				expr.append(restInsideParanthes);
+					//calculate the values
+					float result = doCalc(lNumber, validateOperator(expr.at(k)), rNumber);
+					std::string tmpResult = std::to_string(result);
 
-				//Check if there is more to calculate.
-				for (int op = 0; op != expr.length(); op++) {
-					if (isOperator(expr[op])) {
-						subdivideValue(expr);
+					// create the new expression.
+					expr = "";
+					expr.append(restLeft);
+					expr.append(tmpResult);
+					expr.append(restRight);
+
+					//Check if there is more to calculate.
+ 					for (int op = 0; op != expr.length(); op++) {
+						if (isOperator(expr[op])) {
+							subdivideValue(expr);
+						}
 					}
+					break;
 				}
-				break;
 			}
+			++priorities;
 		}
 	}
 	else {
 		//paranthesis mismatch!
+	}
+
+	if (expr == "") {
+		errHandler.updateLog("ERROR: 019");
 	}
 
 	 //Invalid expression
@@ -291,6 +347,8 @@ float LET::generateRandomNumber() {
 
 float LET::doCalc(float value1, char op, float value2) {
 	float result = 0.0f;
+	if (value1 == 0) return value2;
+	if (value2 == 0) return value1;
 	switch (op) {
 		case '*':
 			result = value1 * value2;
@@ -307,15 +365,6 @@ float LET::doCalc(float value1, char op, float value2) {
 	}
 
 	return result;
-}
-
-std::string LET::sortStringForward(std::string str) {
-	std::string tmp;
-	for (int i = str.length() -1; i >= 0; i--) {
-		tmp += str[i];
-	}
-	str = tmp;
-	return str;
 }
 
 bool LET::isNumber(const std::string str) {
@@ -381,4 +430,15 @@ std::string LET::trimString(std::string &str) {
 	}
 	str = tmp;
 	return str;
+}
+
+bool LET::prioritiesOperator(char op, int priority) {
+	if (priority == 1) {
+		return op == '*' || op == '/';
+	}
+	else if (priority == 2) {
+		return op == '+' || op == '-';
+	}
+
+	return false;
 }

@@ -4,18 +4,21 @@
 #include "Defs.h"
 
 #include <string>
+#include "ErrorHandler.h"
 
 class Functions
 {
 public:
-	Functions(std::string &expression);
+	Functions(const std::string &expression);
+	Functions(const ErrorHandler &errHandler);
 	Functions();
 	~Functions();
 
-	void addNewFunction(const Function function);
-	Function getFunction(std::string functionName) const;
+	void addNewFunction(const Function &function);
+	Function getFunction(const std::string functionName);
 
 private:
+	ErrorHandler errHandler;
 	std::vector<Function> functions;
 };
 

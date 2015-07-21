@@ -5,11 +5,15 @@ Function::Function() {
 	initializeValues();
 }
 
-Function::Function(std::string expression) : Function()
+Function::Function(const std::string expression) : Function()
 {
 	if (expression != "") {
 		identifyPartsInHead(expression);
 	}
+}
+
+Function::Function(const ErrorHandler &errHandler) {
+	this->errHandler = errHandler;
 }
 
 //copy constructor.
@@ -83,11 +87,16 @@ void Function::identifyPartsInHead(const std::string &expression) {
 	}
 	else {
 		//error in syntax datatype is missing...
+		errHandler.updateLog("ERROR: 014");
 		return;
 	}
 }
 
 bool Function::addVariable(const std::string &name, const std::string &value, const int &datatype) {
+	if (name == "" || value == "" || datatype == 0) {
+		errHandler.updateLog("ERROR: 013");
+	}
+
 	std::string n = name;
 	std::string v = value;
 	int d = datatype;
@@ -115,6 +124,9 @@ bool Function::addVariable(const std::string &name, const std::string &value, co
 }
 
 bool Function::addArg(const std::string &name, const std::string &value, const int &datatype) {
+	if (name == "" || value == "" || datatype == 0) {
+		errHandler.updateLog("ERROR: 013");
+	}
 	std::string n = name;
 	std::string v = value;
 	int d = datatype;
@@ -170,11 +182,12 @@ LET Function::getVariableByName(const std::string &name) {
 	}
 
 	//trying to get a none existing variable!
+	errHandler.updateLog("ERROR: 001");
 	return variable;
 }
 
 //Observe function does not erase function name.
-Function& Function::emptyBody(Function &function) {
+Function& Function::eraseBodyContent(Function &function) {
 	function.data->argsContainer = NULL;
 	function.data->argsCapacity = 10;
 	function.data->argsLen = 0;

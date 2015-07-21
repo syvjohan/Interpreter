@@ -31,9 +31,11 @@ Manager::~Manager()
 }
 
 void Manager::init() {
-	scanner.readFile("1.0Instructions.txt"); //code file to be read from!
+	errorHandler.init();
+	scanner.readFile("instructions/1.0Instructions.txt"); //code file to be read from!
 
 	for (tableIndex = 0; tableIndex != scanner.length(); tableIndex++) {
+		errorHandler.setLineNumber(scanner.getLinenumber(tableIndex));
 		table(scanner.getInstructionAt(tableIndex).first, scanner.getInstructionAt(tableIndex).second);
 	}
 }
@@ -63,7 +65,7 @@ void Manager::table(const std::string keyword, const std::string expression) {
 		evalGOTO(expression);
 	}
 	else if (keyword == "END") {
-		std::this_thread::sleep_for(std::chrono::milliseconds(50000));
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		exit(0);
 	}
 	else if (keyword == "FOR") {
@@ -249,6 +251,7 @@ void Manager::evalIF(const std::string &expression) {
 	}
 	else {
 		//syntax error, problem with equal operator and keyword THEN.
+		errorHandler.updateLog("ERROR: 020");
 	}
 
 	if (!isVariable1 || !isVariable2) {
@@ -325,6 +328,7 @@ void Manager::evalIF(const std::string &expression) {
 		}
 		else {
 			//cannot compare digits with letters.
+			errorHandler.updateLog("ERROR: 000");
 		}
 
 		if (result) {
@@ -338,6 +342,7 @@ void Manager::evalIF(const std::string &expression) {
 			}
 			else {
 				// Line number is missing
+				errorHandler.updateLog("ERROR: 002");
 			}
 		}
 		else {
@@ -346,6 +351,7 @@ void Manager::evalIF(const std::string &expression) {
 	}
 	else {
 		//syntax error variablesHeap to compare has not been defined!
+		errorHandler.updateLog("ERROR: 008");
 	}
 
 	delete tmp;
@@ -370,6 +376,7 @@ void Manager::evalGOTO(const std::string &expression) {
 		}
 	}
 	// Line has not been defiend, cannot goto undefiend line.
+	errorHandler.updateLog("ERROR: 002");
 }
 
 void Manager::evalFOR(const std::string &expression) {
@@ -424,14 +431,17 @@ void Manager::evalFOR(const std::string &expression) {
 
 			if (!validRhsValue) {
 				// cannot use a none initialized variable.
+				errorHandler.updateLog("ERROR: 001");
 			}
 		}
 		else {
 			// No valid rhs value!
+			errorHandler.updateLog("ERROR: 018");
 		}
 	}
 	else {
 		// syntax error keyword TO and equal operator are incorrect.
+		errorHandler.updateLog("ERROR: 021");
 	}
 }
 
@@ -456,20 +466,24 @@ void Manager::evalNEXT(const std::string &variable) {
 						}
 						else {
 							//increment variable datatype can only be an INT.
+							errorHandler.updateLog("ERROR: 022");
 						}
 					}
 				}
 		}
 			if (!VariableonStack) {
 				// variable was not found on stack!
+				errorHandler.updateLog("ERROR: 007");
 			}
 		}
 		else {
 			// refer to wrong varible in hierarchy to increment.
+			errorHandler.updateLog("ERROR: 001");
 		}
 	}
 	else {
 		// incorrect syntax no increment variable has been added.
+		errorHandler.updateLog("ERROR: 018");
 	}
 }
 
@@ -497,14 +511,13 @@ void Manager::evalENDDEF() {
 //Change variable name to variable value in string if variable name exist in expression.
 std::string Manager::exchangeVariableNameToValue(const std::string expression) {
 	std::string expr = expression;
-
 	//if it is not a variable
 	size_t foundStr = expr.find_first_of('"');
 	if (foundStr != std::string::npos) {
 		return expr;
 	}
 
-	size_t foundOperator = getOperatorPos(&expr);
+	size_t foundOperator = getOperatorPos(expr);
 	std::string tmpLhs = expr.substr(0, foundOperator +1);
 	std::string name = "";
 
@@ -519,7 +532,7 @@ std::string Manager::exchangeVariableNameToValue(const std::string expression) {
 	std::string tmp = "";
 	if (expr != "") {
 		for (int i = 0; i <= expr.length(); i++) {
-			size_t foundOperator = getOperatorPos(&expr);
+			size_t foundOperator = getOperatorPos(expr);
 			std::string lhs = "";
 			std::string lhsValue = "";
 			std::string op = "";
@@ -547,7 +560,7 @@ std::string Manager::exchangeVariableNameToValue(const std::string expression) {
 				}
 
 				//if lhs contains operators remove them.
-				size_t foundOperatorLhs = getOperatorPos(&lhs);
+				size_t foundOperatorLhs = getOperatorPos(lhs);
 				if (foundOperatorLhs != std::string::npos) {
 					paranthes = lhs.substr(foundOperatorLhs, 1);
 					if (paranthes != ")" && paranthes != "(") {
@@ -609,7 +622,7 @@ std::string Manager::exchangeVariableNameToValue(const std::string expression) {
 		//only one value
 		if (expr.length() != 0) {
 			std::string paranthes = "";
-			size_t foundOperatorLhs = getOperatorPos(&expr);
+			size_t foundOperatorLhs = getOperatorPos(expr);
 			if (foundOperatorLhs != std::string::npos) {
 				paranthes = expr.substr(foundOperatorLhs, 1);
 				if (paranthes != ")" && paranthes != "(") {
@@ -671,7 +684,7 @@ void Manager::overwriteOldVariable(const LET newVar) {
 		for (int h = 0; h != variablesHeap.size(); h++) {
 			if (newVar.getName() == variablesHeap.at(h).getName()) {
 				std::swap(variablesHeap[h], variablesHeap.back());
-				variablesHeap.pop_back(); // (variablesHeap.begin() + h);
+				variablesHeap.pop_back();
 				break;
 			}
 		}
@@ -697,55 +710,52 @@ size_t Manager::getCompareOperatorPos(const std::string *expression) {
 		return opLarger;
 	}
 
+	errorHandler.updateLog("ERROR: 023");
 	return std::string::npos;
 }
 
-size_t Manager::getOperatorPos(const std::string *expression) {
-	size_t opEqual = expression->find("=");
-	size_t opLess = expression->find("<");
-	size_t opLarger = expression->find(">");
-	size_t opAsterix = expression->find("*");
-	size_t opPlus = expression->find("+");
-	size_t opMinus = expression->find("-");
-	size_t opDividing = expression->find("/");
-	size_t opModulos = expression->find("%");
-	size_t opOpenParanthes = expression->find("(");
-	size_t opCloseParanthes = expression->find(")");
-	if (opEqual != std::string::npos) {
-		return opEqual;
+int Manager::getOperatorPos(const std::string expression) {
+	for (int i = 0; i != expression.length(); i++) {
+		if (expression[i] == '=') {
+			return i;
+		}
+		else if (expression[i] == '<') {
+			return i;
+		}
+		else if (expression[i] == '>') {
+			return i;
+		}
+		else if (expression[i] == '*') {
+			return i;
+		}
+		else if (expression[i] == '+') {
+			return i;
+		}
+		else if (expression[i] == '-') {
+			return i;
+		}
+		else if (expression[i] == '/') {
+			return i;
+		}
+		else if (expression[i] == '%') {
+			return i;
+		}
+		else if (expression[i] == '(') {
+			return i;
+		}
+		else if (expression[i] == ')') {
+			return i;
+		}
+		else if (expression[i] == '<') {
+			return i;
+		}
 	}
-	else if (opLess != std::string::npos) {
-		return opLess;
-	}
-	else if (opLarger != std::string::npos) {
-		return opLarger;
-	}
-	else if (opAsterix != std::string::npos) {
-		return opAsterix;
-	}
-	else if (opPlus != std::string::npos) {
-		return opPlus;
-	}
-	else if (opMinus != std::string::npos) {
-		return opMinus;
-	}
-	else if (opMinus != std::string::npos) {
-		return opMinus;
-	}
-	else if (opDividing != std::string::npos) {
-		return opDividing;
-	}
-	else if (opModulos != std::string::npos) {
-		return opModulos;
-	}
-	else if (opOpenParanthes != std::string::npos) {
-		return opOpenParanthes;
-	}
-	else if (opCloseParanthes != std::string::npos) {
-		return opCloseParanthes;
-	}
+	return -1;
+}
 
-	return std::string::npos;
+bool Manager::isOperator(char op) {
+	return (op == '+' || op == '-' || op == '/' || op == '*' || op == ')' ||
+		op == '(' || op == '=');
 }
 
 void Manager::incrementNestedForLoops(const std::string &variableName) {
@@ -872,8 +882,7 @@ void Manager::doFunction(const std::string &expression) {
 
 	//clear memory since leaving function.
 	//empty function
-	function = &function->emptyBody(*function);
-	//	std::string line = function->getCallingPoint();
+	function = &function->eraseBodyContent(*function);
 
 	//check datatype
 	bool isAlpha = std::regex_match(var->getValue(), std::regex("^[A-Za-z]+$"));
@@ -890,6 +899,7 @@ void Manager::doFunction(const std::string &expression) {
 	}
 	else {
 		//datatype error, datatype no recognize.
+		errorHandler.updateLog("ERROR: 014");
 	}
 
 	//check if variable exist on heap

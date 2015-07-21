@@ -20,11 +20,16 @@ Scanner::Scanner() {
 	keywords[15] = "RETURN";
 }
 
+Scanner::Scanner(const ErrorHandler &errHandler) {
+	this->errHandler = errHandler;
+}
+
 Scanner::~Scanner()
 {
 }
 
-void Scanner::readFile(std::string path) {
+void Scanner::readFile(const std::string path) {
+	if (path == "") return errHandler.updateLog("ERROR: 024");
 	std::ifstream file(path);
 	if (file.is_open()) {
 

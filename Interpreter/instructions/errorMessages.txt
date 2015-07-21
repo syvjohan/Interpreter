@@ -1,0 +1,25 @@
+ERROR: 000, Cannot compare digits with letters.
+ERROR: 001, Variable does not exist.
+ERROR: 002, Linenumber does not exist.
+ERROR: 003, Cannot identify keyword.
+ERROR: 004, Interpreter has no support for negative numbers.
+ERROR: 005, Missing value.
+ERROR: 006, Missing name.
+ERROR: 007, Variable does not exist on Stack.
+ERROR: 008, Variable does not exist on Heap.
+ERROR: 009, Function name has not been defined.
+ERROR: 010, Function return value is wrong.
+ERROR: 011, Missing END statement.
+ERROR: 012, possible lost of data convering from float to int.
+ERROR: 013, Cannot create a variable without a name 
+ERROR: 014, Syntax error, missing datatype for argument.
+ERROR: 015, Requested function could not be found. Has function been declared with DEFINE?
+ERROR: 016, Variable missing name.
+ERROR: 017, Variable missing value.
+ERROR: 018, Syntax wrong in expression.
+ERROR: 019, Total failure in evaluation of expression.
+ERROR: 020, Syntax error, error depends on equal operator or keyword THEN.
+ERROR: 021, Syntax error, error depends on equal operator or keyword To.
+ERROR: 022, Increment variables datatype can only be an INT.
+ERROR: 023, Interpreter only supports "<", ">", "="" as compare operators.
+ERROR: 024, Wrong file path.

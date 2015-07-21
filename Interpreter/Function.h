@@ -4,12 +4,14 @@
 #include "Defs.h"
 
 #include <string>
+#include "ErrorHandler.h"
 
 class Function
 {
 public:
-	Function(std::string expression);
+	Function(const std::string expression);
 	Function(const Function &obj);
+	Function(const ErrorHandler &errHandler);
 	Function();
 	~Function();
 	void identifyPartsInHead(const std::string &expression);
@@ -39,9 +41,12 @@ public:
 
 	void removeVariable(const LET &variable);
 	int doVarExist(std::string name, LET *container, int size);
-	Function& emptyBody(Function &function);
+	Function& eraseBodyContent(Function &function);
 
 private:
+
+	ErrorHandler errHandler;
+
 	struct FunctionData
 	{
 		std::string functionName;

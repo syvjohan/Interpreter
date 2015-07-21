@@ -1,0 +1,21 @@
+10 INT i sqr max 
+20 DEC half 
+30 STR again
+40 PRINT "Tal i olika former"
+50 PRINT "Vilket tal ska vi rakna upp till?"
+60 INPUT max
+65 PRINT "Half Whole Squared"
+70 FOR i = 1 TO max
+80 LET sqr = i * i
+90 LET half = i / 2
+100 PRINT half ;
+110 PRINT "    " ;
+120 PRINT i ;
+130 PRINT "    " ;
+140 PRINT sqr
+150 NEXT i
+160 PRINT " "
+170 PRINT "En gang till (Ja/Nej)" ;
+180 INPUT again
+190 IF again = "Ja" THEN GOTO 50
+200 END

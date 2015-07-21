@@ -9,6 +9,7 @@
 #include "Scanner.h"
 #include "LET.h"
 #include "Functions.h"
+#include "ErrorHandler.h"
 #include "Defs.h"
 
 class Manager
@@ -21,6 +22,7 @@ public:
 
 private:
 	Scanner scanner;
+	ErrorHandler errorHandler;
 	std::vector<LET> variablesHeap;
 	std::vector<LET> variablesStack;
 	int positionStackForScope;
@@ -45,7 +47,8 @@ private:
 	std::string exchangeVariableNameToValue(const std::string expression);
 	void overwriteOldVariable(const LET newVar);
 	size_t getCompareOperatorPos(const std::string *expression);
-	size_t getOperatorPos(const std::string *expression);
+	int getOperatorPos(const std::string expression);
+	bool isOperator(char op);
 	std::string getDatatypeAsString(const int datatype);
 	void incrementNestedForLoops(const std::string &variableName);
 	void decrementNestedForLoops();

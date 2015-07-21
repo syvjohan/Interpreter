@@ -66,6 +66,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ErrorHandler.cpp" />
     <ClCompile Include="Function.cpp" />
     <ClCompile Include="Functions.cpp" />
     <ClCompile Include="LET.cpp" />
@@ -75,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Defs.h" />
+    <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="Function.h" />
     <ClInclude Include="Functions.h" />
     <ClInclude Include="Map.h" />
