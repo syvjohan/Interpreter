@@ -10,16 +10,14 @@
 class LET
 {
 public:
-	LET(const std::string &expression);
+	LET(const std::string &expression, ErrorHandler *errHandler);
 	LET(const LET &let); //copy constructor
-	LET(const ErrorHandler &errHandler);
 	LET();
 	~LET();
 
 	std::string getName() const;
 	std::string getValue() const;
 	int getDatatype() const;
-
 	void setName(const std::string &name);
 	void setValue(const std::string &value);
 	void setDataType(const int &datatype);

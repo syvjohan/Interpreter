@@ -3,24 +3,25 @@
 
 #include <string>
 #include <iostream>
+#include "ErrorHandler.h"
 
 class Map {
 public:
-	Map();
+	Map(ErrorHandler *errHandler);
 	Map(const Map& obj); //copy constructor.
 	~Map();
 
 	struct Pair {
-		int linenumber;
-		std::string value;
+		int linenumber = 0;
+		std::string value = "";
 	};
 
 	bool pushBack(int linenumber, std::string value);
 	Pair getElementAt(int linenumber);
-	Pair* getAllElements();
 	int length();
 
 private:
+	ErrorHandler errHandler;
 	int elementNumber;
 	int capacity;
 	Pair *map;

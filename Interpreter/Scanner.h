@@ -12,7 +12,7 @@
 class Scanner {
 public:
 	Scanner();
-	Scanner(const ErrorHandler &errHandler);
+	Scanner(ErrorHandler *errorHandler);
 	~Scanner();
 	
 	void readFile(const std::string path);
@@ -26,7 +26,7 @@ public:
 	bool isString(std::string str);
 
 private:
-	Map map;
+	Map *map;
 	ErrorHandler errHandler;
 
 	int keywordsLength;

@@ -4,15 +4,15 @@ LET::LET() {
 	initializeValues();
 }
 
-LET::LET(const std::string &expression) : LET() {
+LET::LET(const std::string &expression, ErrorHandler *errHandler) : LET() {
 	if (expression != "") {
+		this->errHandler = *errHandler;
+
 		identifyPartsInExpression(expression);
 		transformValueAfterDatatype();
+		return;
 	}
-}
-
-LET::LET(const ErrorHandler &errHandler) {
-	this->errHandler = errHandler;
+	this->errHandler.updateLog("ERROR: 027");
 }
 
 //copy constructor.
@@ -37,7 +37,6 @@ void LET::initializeValues() {
 }
 
 void LET::setName(const std::string &name) {
-	if (name == "") return errHandler.updateLog("ERROR: 016");
 	data->name = name;
 }
 
@@ -56,7 +55,7 @@ void LET::setDataType(const int &datatype) {
 		data->datatype = 3;
 	}
 	else {
-		data->datatype == 1;
+		data->datatype = 1;
 	}
 }
 

@@ -21,8 +21,8 @@ public:
 	void init();
 
 private:
-	Scanner scanner;
-	ErrorHandler errorHandler;
+	Scanner *scanner;
+	ErrorHandler errHandler;
 	std::vector<LET> variablesHeap;
 	std::vector<LET> variablesStack;
 	int positionStackForScope;
@@ -44,6 +44,7 @@ private:
 	std::string callingPoint;
 
 	//Help Functions.
+	void createErrorHandler();
 	std::string exchangeVariableNameToValue(const std::string expression);
 	void overwriteOldVariable(const LET newVar);
 	size_t getCompareOperatorPos(const std::string *expression);
@@ -58,6 +59,7 @@ private:
 	void addVariable(const LET &variable, const int memoryType);
 	bool isAFunction(const std::string expression);
 	void doFunction(const std::string &expression);
+	bool isValidInput(const std::string expression);
 	void table(const std::string keyword, const std::string expression);
 
 	//Evaluation

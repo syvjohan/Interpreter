@@ -1,20 +1,23 @@
 #include "Map.h"
 
-Map::Map() {
+Map::Map(ErrorHandler *errHandler) {
+	this->errHandler = *errHandler;
+
 	elementNumber = 0;
 	capacity = 100;
-	map = new Pair[capacity];
+	map = DBG_NEW Pair[capacity];
 }
 
 //copy constructor
 Map::Map(const Map& obj) {
-	map = new Pair;
+	map = DBG_NEW Pair;
 	*map = *obj.map;
 }
 
 Map::~Map() {
 	if (map != nullptr) {
 		delete[] map;
+		map = NULL;
 	}
 }
 
@@ -30,7 +33,7 @@ bool Map::pushBack(int linenumber, std::string value) {
 		++elementNumber;
 		return true;
 	}
-
+	errHandler.updateLog("ERROR: 026");
 	return false;
 }
 
@@ -44,25 +47,16 @@ Map::Pair Map::getElementAt(int linenumber) {
 	}
 }
 
-Map::Pair* Map::getAllElements() {
-	Pair *container = new Pair[elementNumber];
-	for (int i = 0; i <= elementNumber; i++) {
-		Pair pair;
-		pair.value = map[i].value;
-		container[i] = pair;
-	}
-	return container;
-}
-
 void Map::rezise() {
 	int newCapacity = capacity + 100;
-	Pair *tmpMap = new Pair[newCapacity];
+	Pair *tmpMap = DBG_NEW Pair[newCapacity];
 
 	memcpy(tmpMap, map, capacity);
 
 	map = tmpMap;
 	capacity = newCapacity;
 	delete[] tmpMap;
+	tmpMap = NULL;
 }
 
 int Map::length() {
@@ -72,7 +66,7 @@ int Map::length() {
 bool Map::isLinenumberUnique(int linenumber) {
 	for (int i = 0; i != capacity; i++) {
 		if (linenumber == map[i].linenumber)
-			return false;
+			errHandler.updateLog("ERROR: 025");
 	}
 
 	return true;

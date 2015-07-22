@@ -2,6 +2,7 @@
 
 ErrorHandler::ErrorHandler()
 {
+	lineNumber = "?";
 }
 
 ErrorHandler::~ErrorHandler()
@@ -19,7 +20,7 @@ void ErrorHandler::fillVectorWithMsg(const std::string path) {
 	if (file.is_open()) {
 		for (std::string line = ""; std::getline(file, line);) {
 			if (line.length() > 12) {
-				std::string code = line.substr(0, 11);
+				std::string code = line.substr(0, 10);
 				std::string msg = line.substr(12, line.length() - 10);
 				containerErrMsg.push_back(std::make_pair(code, msg));
 			}
@@ -33,12 +34,14 @@ void ErrorHandler::updateLog(const std::string errCode) {
 
 	for (int i = 0; i != containerErrMsg.size(); i++) {
 		if (errCode == containerErrMsg[i].first) {
-			file << errCode << " on line: " << getLineNumber() << ". error message: " <<
+			file << errCode << " on line: " << getLineNumber() << ".	Error message: " <<
 				containerErrMsg[i].second << "\n";
-			break;
+			file.close();
+			exit(0);
 		}
 	}
 
+	file << "ERROR: Non caught error on line: " << getLineNumber() << "\n";
 	file.close();
 	exit(0);
 }

@@ -20,12 +20,16 @@ Scanner::Scanner() {
 	keywords[15] = "RETURN";
 }
 
-Scanner::Scanner(const ErrorHandler &errHandler) {
-	this->errHandler = errHandler;
+Scanner::Scanner(ErrorHandler *errHandler) : Scanner() {
+	this->errHandler = *errHandler;
+	map = DBG_NEW Map(errHandler);
 }
 
 Scanner::~Scanner()
 {
+	if (map != nullptr) {
+		delete[] map;
+	}
 }
 
 void Scanner::readFile(const std::string path) {
@@ -56,7 +60,7 @@ void Scanner::readFile(const std::string path) {
 
 			value = removeFirstAndLastWhitesspace(value);
 
-			map.pushBack(linenumber, value);
+			map->pushBack(linenumber, value);
 		}
 	}
 }
@@ -142,19 +146,19 @@ std::string Scanner::getExpression(std::string str, std::string strIrrelevant) {
 }
 
 std::pair<std::string, std::string> Scanner::getInstructionAt(int index) {
-	std::string value = map.getElementAt(index).value;
+	std::string value = map->getElementAt(index).value;
 	std::string keyword = getkeyword(value);
 	std::string expression = getExpression(value, keyword);
 	return std::make_pair(keyword, expression);
 }
 
 std::string Scanner::getLinenumber(int index) {
-	return std::to_string(map.getElementAt(index).linenumber);
+	return std::to_string(map->getElementAt(index).linenumber);
 }
 
 int Scanner::getIndex(int linenumber) {
 	for (int i = 0; i != length(); i++) {
-		if (map.getElementAt(i).linenumber == linenumber) {
+		if (map->getElementAt(i).linenumber == linenumber) {
 			return i;
 		}
 	}
@@ -163,5 +167,5 @@ int Scanner::getIndex(int linenumber) {
 }
 
 int Scanner::length() {
-	return map.length();
+	return map->length();
 }

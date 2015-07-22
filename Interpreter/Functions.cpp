@@ -3,8 +3,8 @@
 Functions::Functions() {
 }
 
-Functions::Functions(const ErrorHandler &errHandler) : Functions() {
-	this->errHandler = errHandler;
+Functions::Functions(ErrorHandler *errHandler) : Functions() {
+	this->errHandler = *errHandler;
 }
 
 Functions::~Functions() {}
@@ -21,6 +21,5 @@ Function Functions::getFunction(const std::string functionName) {
 		}
 	}
 
-	errHandler.updateLog("ERROR: 015");
 	return function;
 }

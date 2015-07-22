@@ -23,3 +23,8 @@ ERROR: 021, Syntax error, error depends on equal operator or keyword To.
 ERROR: 022, Increment variables datatype can only be an INT.
 ERROR: 023, Interpreter only supports "<", ">", "="" as compare operators.
 ERROR: 024, Wrong file path.
+ERROR: 025, Reading input file, found that linenumber is duplicated.
+ERROR: 026, Reading input file, found that Linenumber not specified.
+ERROR: 027, expression is missing.
+ERROR: 028, keyword is missing.
+ERROR: 029, Unsupported datatype.

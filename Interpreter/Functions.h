@@ -10,7 +10,7 @@ class Functions
 {
 public:
 	Functions(const std::string &expression);
-	Functions(const ErrorHandler &errHandler);
+	Functions(ErrorHandler *errorHandler);
 	Functions();
 	~Functions();
 

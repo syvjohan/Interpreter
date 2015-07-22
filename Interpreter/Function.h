@@ -9,9 +9,8 @@
 class Function
 {
 public:
-	Function(const std::string expression);
+	Function(const std::string expression, ErrorHandler *errHandler);
 	Function(const Function &obj);
-	Function(const ErrorHandler &errHandler);
 	Function();
 	~Function();
 	void identifyPartsInHead(const std::string &expression);

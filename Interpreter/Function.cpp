@@ -5,15 +5,12 @@ Function::Function() {
 	initializeValues();
 }
 
-Function::Function(const std::string expression) : Function()
+Function::Function(const std::string expression, ErrorHandler *errHandler) : Function()
 {
+	this->errHandler = *errHandler;
 	if (expression != "") {
 		identifyPartsInHead(expression);
 	}
-}
-
-Function::Function(const ErrorHandler &errHandler) {
-	this->errHandler = errHandler;
 }
 
 //copy constructor.

@@ -1,6 +1,10 @@
 #include "Manager.h"
 
 Manager::Manager() {
+	createErrorHandler();
+
+	scanner = DBG_NEW Scanner(&errHandler);
+
 	lengthNestedForLoops = 0;
 	capacityFoorLoops = 10;
 	nestedForLoops = DBG_NEW std::string[capacityFoorLoops];
@@ -8,8 +12,7 @@ Manager::Manager() {
 	insideFunction = false;
 	readLines = true;
 
-	Functions *functions = DBG_NEW Functions();
-	this->functions = functions;
+	functions = DBG_NEW Functions(&errHandler);
 }
 
 Manager::~Manager()
@@ -28,26 +31,40 @@ Manager::~Manager()
 		delete function;
 		function = NULL;
 	}
+
+	if (scanner != nullptr) {
+		delete scanner;
+		scanner = NULL;
+	}
 }
 
 void Manager::init() {
-	errorHandler.init();
-	scanner.readFile("instructions/1.0Instructions.txt"); //code file to be read from!
+	scanner->readFile("instructions/1.3Instructions.txt"); //code file to be read from!
 
-	for (tableIndex = 0; tableIndex != scanner.length(); tableIndex++) {
-		errorHandler.setLineNumber(scanner.getLinenumber(tableIndex));
-		table(scanner.getInstructionAt(tableIndex).first, scanner.getInstructionAt(tableIndex).second);
+	for (tableIndex = 0; tableIndex != scanner->length(); tableIndex++) {
+		errHandler.setLineNumber(scanner->getLinenumber(tableIndex));
+		table(scanner->getInstructionAt(tableIndex).first, scanner->getInstructionAt(tableIndex).second);
 	}
+}
+
+void Manager::createErrorHandler() {
+	ErrorHandler *pErrHandler;
+	pErrHandler = &errHandler;
+
+	errHandler.init();
 }
 
 void Manager::table(const std::string keyword, const std::string expression) {
 	if (!readLines) {
 		if (keyword == "ENDDEF") {
-			function->setLineNumberEnd(std::stoi(scanner.getLinenumber(tableIndex)));
+			function->setLineNumberEnd(std::stoi(scanner->getLinenumber(tableIndex)));
 			readLines = true;
 		}
 		return;
 	}
+
+	if (keyword != "END" && keyword == "") { errHandler.updateLog("ERROR: 028"); }
+	if (expression == "" && keyword != "END") { errHandler.updateLog("ERROR: 027"); }
 
 	if (keyword == "PRINT") {
 		evalPRINT(expression);
@@ -97,8 +114,8 @@ void Manager::table(const std::string keyword, const std::string expression) {
 
 void Manager::evalPRINT(const std::string &expression) {
 	std::string expr = expression;
-	bool isString = scanner.isString(expr);
-	expr = scanner.trimPRINT(expr);
+	bool isString = scanner->isString(expr);
+	expr = scanner->trimPRINT(expr);
 
 	size_t foundSemicolon = expr.find(';');
 	if (foundSemicolon != std::string::npos) {
@@ -128,7 +145,8 @@ void Manager::evalLET(const std::string &expression) {
 
 	expr = exchangeVariableNameToValue(expr);
 	 
-	LET *var = DBG_NEW LET(expr);
+	LET *var = DBG_NEW LET(expr, &errHandler);
+
 	overwriteOldVariable(*var);
 
 	delete var;
@@ -148,7 +166,7 @@ void Manager::evalLET(const std::string &expression, const int datatype) {
 			varExpression.append(getDatatypeAsString(d));
 			varExpression.append(varName);
 
-			LET *variable = DBG_NEW LET(varExpression);
+			LET *variable = DBG_NEW LET(varExpression, &errHandler);
 
 			//Store variable on heap or stack
 			if (lengthNestedForLoops < 1) {
@@ -174,7 +192,9 @@ void Manager::evalINPUT(const std::string &expression) {
 	expr.append("=");
 	expr.append(input);
 
-	LET *var = DBG_NEW LET(expr);
+	if (!isValidInput(input)) { errHandler.updateLog("ERROR: 029"); }
+
+	LET *var = DBG_NEW LET(expr, &errHandler);
 
 	overwriteOldVariable(*var);
 
@@ -243,15 +263,19 @@ void Manager::evalIF(const std::string &expression) {
 		if (opPos != std::string::npos && foundTHEN != std::string::npos) {
 			value = expr.substr(opPos + 1, foundTHEN - opPos - 1);
 		}
+		else {
+			//syntax error, problem with equal operator and keyword THEN.
+			errHandler.updateLog("ERROR: 020");
+		}
 	}
 	else if (!isVariable1) {
 		if (opPos != std::string::npos && foundTHEN != std::string::npos) {
 			value = expr.substr(0, opPos);
 		}
-	}
-	else {
-		//syntax error, problem with equal operator and keyword THEN.
-		errorHandler.updateLog("ERROR: 020");
+		else {
+			//syntax error, problem with equal operator and keyword THEN.
+			errHandler.updateLog("ERROR: 020");
+		}
 	}
 
 	if (!isVariable1 || !isVariable2) {
@@ -264,12 +288,12 @@ void Manager::evalIF(const std::string &expression) {
 		if (isAlpha) {
 			newExpression.append("=");
 			newExpression.append(value);
-			tmp = DBG_NEW LET(newExpression);
+			tmp = DBG_NEW LET(newExpression, &errHandler);
 		}
 		//if it is a number.
 		else if (isNumber != std::string::npos) {
 			newExpression.append(value);
-			tmp = DBG_NEW LET(newExpression);
+			tmp = DBG_NEW LET(newExpression, &errHandler);
 		}
 		else {
 			//syntax error, numbers and letters are mixed!
@@ -311,15 +335,17 @@ void Manager::evalIF(const std::string &expression) {
 		}
 		// digits
 		else if ((var1.getDatatype() == 1 || var1.getDatatype() == 2) && (var2.getDatatype() == 1 || var2.getDatatype() == 2)) {
+			float val1 = std::stof(var1.getValue());
+			float val2 = std::stof(var2.getValue());
 			//comapre variablesHeap.
 			if (findOpGreater != std::string::npos) {
-				result = var1.getValue() > var2.getValue();
+				result = val1 > val2;
 			}
 			else if (findOpLess != std::string::npos) {
-				result = var1.getValue() < var2.getValue();
+				result = val1 < val2;
 			}
 			else if (findOpEqual != std::string::npos) {
-				result = var1.getValue() == var2.getValue();
+				result = val1 == val2;
 			}
 			else {
 				result = false;
@@ -328,7 +354,7 @@ void Manager::evalIF(const std::string &expression) {
 		}
 		else {
 			//cannot compare digits with letters.
-			errorHandler.updateLog("ERROR: 000");
+			errHandler.updateLog("ERROR: 000");
 		}
 
 		if (result) {
@@ -342,7 +368,7 @@ void Manager::evalIF(const std::string &expression) {
 			}
 			else {
 				// Line number is missing
-				errorHandler.updateLog("ERROR: 002");
+				errHandler.updateLog("ERROR: 002");
 			}
 		}
 		else {
@@ -351,7 +377,7 @@ void Manager::evalIF(const std::string &expression) {
 	}
 	else {
 		//syntax error variablesHeap to compare has not been defined!
-		errorHandler.updateLog("ERROR: 008");
+		errHandler.updateLog("ERROR: 008");
 	}
 
 	delete tmp;
@@ -360,23 +386,23 @@ void Manager::evalIF(const std::string &expression) {
 
 void Manager::evalGOTO(const std::string &expression) {
 	std::string expr = expression;
-	int len = scanner.length();
+	int len = scanner->length();
 	std::string linenumber = "";
 	for (int i = 0; i != len; i++) {
-		linenumber = scanner.getLinenumber(i);
+		linenumber = scanner->getLinenumber(i);
 		if (linenumber == expr) {
-			std::string value = scanner.getInstructionAt(i).second;
-			std::string key = scanner.getInstructionAt(i).first;
+			std::string value = scanner->getInstructionAt(i).second;
+			std::string key = scanner->getInstructionAt(i).first;
 
 			// get instruction index.
-			tableIndex = scanner.getIndex(std::stoi(linenumber));
+			tableIndex = scanner->getIndex(std::stoi(linenumber));
 
 			table(key, value);
-			break;
+			return;
 		}
 	}
 	// Line has not been defiend, cannot goto undefiend line.
-	errorHandler.updateLog("ERROR: 002");
+	errHandler.updateLog("ERROR: 002");
 }
 
 void Manager::evalFOR(const std::string &expression) {
@@ -400,6 +426,7 @@ void Manager::evalFOR(const std::string &expression) {
 							endLoop();
 							break;
 						}
+						break;
 					}
 				}
 			}
@@ -412,7 +439,7 @@ void Manager::evalFOR(const std::string &expression) {
 		std::string incrementVarValue = expr.substr(foundOpEqual + 1, foundTO - foundOpEqual - 1);
 		std::string incrementVar = "";
 		incrementVar.append(incrementVarName).append("=").append(incrementVarValue);
-		LET *var = DBG_NEW LET(incrementVar);
+		LET *var = DBG_NEW LET(incrementVar, &errHandler);
 		addVariable(*var, 2);
 		positionStackForScope = variablesStack.size(); //sets first variable position on stack i for loop.
 
@@ -431,17 +458,17 @@ void Manager::evalFOR(const std::string &expression) {
 
 			if (!validRhsValue) {
 				// cannot use a none initialized variable.
-				errorHandler.updateLog("ERROR: 001");
+				errHandler.updateLog("ERROR: 001");
 			}
 		}
 		else {
 			// No valid rhs value!
-			errorHandler.updateLog("ERROR: 018");
+			errHandler.updateLog("ERROR: 018");
 		}
 	}
 	else {
 		// syntax error keyword TO and equal operator are incorrect.
-		errorHandler.updateLog("ERROR: 021");
+		errHandler.updateLog("ERROR: 021");
 	}
 }
 
@@ -466,33 +493,33 @@ void Manager::evalNEXT(const std::string &variable) {
 						}
 						else {
 							//increment variable datatype can only be an INT.
-							errorHandler.updateLog("ERROR: 022");
+							errHandler.updateLog("ERROR: 022");
 						}
 					}
 				}
 		}
 			if (!VariableonStack) {
 				// variable was not found on stack!
-				errorHandler.updateLog("ERROR: 007");
+				errHandler.updateLog("ERROR: 007");
 			}
 		}
 		else {
 			// refer to wrong varible in hierarchy to increment.
-			errorHandler.updateLog("ERROR: 001");
+			errHandler.updateLog("ERROR: 001");
 		}
 	}
 	else {
 		// incorrect syntax no increment variable has been added.
-		errorHandler.updateLog("ERROR: 018");
+		errHandler.updateLog("ERROR: 018");
 	}
 }
 
 void Manager::evalDEFINE(const std::string &expression) {
 	std::string expr = expression;
 	readLines = false;
-	function = DBG_NEW Function(expr);
+	function = DBG_NEW Function(expr, &errHandler);
 	//get linenumber for header.
-	function->setLineNumberStart(std::stoi(scanner.getLinenumber(tableIndex +1)));
+	function->setLineNumberStart(std::stoi(scanner->getLinenumber(tableIndex + 1)));
 	functions->addNewFunction(*function);
 }
 
@@ -505,7 +532,7 @@ void Manager::evalRETURN(const std::string &expression) {
 
 void Manager::evalENDDEF() {
 	//get linenumber for end of Functions.
-	function->setLineNumberEnd(std::stoi(scanner.getLinenumber(tableIndex -1)));
+	function->setLineNumberEnd(std::stoi(scanner->getLinenumber(tableIndex - 1)));
 }
 
 //Change variable name to variable value in string if variable name exist in expression.
@@ -673,9 +700,9 @@ void Manager::overwriteOldVariable(const LET newVar) {
 	if (lengthNestedForLoops > 0) {
 		for (int s = 0; s != variablesStack.size(); s++) {
 			if (newVar.getName() == variablesStack.at(s).getName()) {
-				std::swap(variablesStack[s], variablesStack.back());
-				variablesStack.pop_back();
-				break;
+				variablesStack.at(s).setValue(newVar.getValue());
+				variablesStack.at(s).setDataType(newVar.getDatatype());
+				return;
 			}
 		}
 		addVariable(newVar, 2);
@@ -683,9 +710,11 @@ void Manager::overwriteOldVariable(const LET newVar) {
 	else {
 		for (int h = 0; h != variablesHeap.size(); h++) {
 			if (newVar.getName() == variablesHeap.at(h).getName()) {
-				std::swap(variablesHeap[h], variablesHeap.back());
-				variablesHeap.pop_back();
-				break;
+				variablesHeap.at(h).setValue(newVar.getValue());
+				variablesHeap.at(h).setDataType(newVar.getDatatype());
+				//std::swap(variablesHeap[h], variablesHeap.back());
+				//variablesHeap.pop_back();
+				return;
 			}
 		}
 		addVariable(newVar, 1);
@@ -710,7 +739,7 @@ size_t Manager::getCompareOperatorPos(const std::string *expression) {
 		return opLarger;
 	}
 
-	errorHandler.updateLog("ERROR: 023");
+	errHandler.updateLog("ERROR: 023");
 	return std::string::npos;
 }
 
@@ -773,20 +802,20 @@ void Manager::gotoLoopHead() {
 	
 	eraseVariablesFromStack();
 
-	std::string value = scanner.getInstructionAt(headLoopIndex).second;
-	std::string key = scanner.getInstructionAt(headLoopIndex).first;
+	std::string value = scanner->getInstructionAt(headLoopIndex).second;
+	std::string key = scanner->getInstructionAt(headLoopIndex).first;
 
 	return table(key, value);
 }
 
 void Manager::endLoop() {
-	std::string value = scanner.getInstructionAt(endLoopIndex).second;
-	std::string key = scanner.getInstructionAt(endLoopIndex).first;
+	std::string value = scanner->getInstructionAt(endLoopIndex).second;
+	std::string key = scanner->getInstructionAt(endLoopIndex).first;
 
 	decrementNestedForLoops();
 	positionStackForScope = 0;
 	tableIndex = endLoopIndex;
-	variablesStack.pop_back();
+	variablesStack.clear(); //variablesStack.pop_back();
 
 	return table(key, value);
 }
@@ -802,12 +831,14 @@ std::string Manager::getDatatypeAsString(const int datatype) {
 		return "STR";
 	}
 
+	errHandler.updateLog("ERROR: 029");
 	return "";
 }
 
 void Manager::eraseVariablesFromStack() {
 	for (int i = variablesStack.size(); i != positionStackForScope; i--) {
 		variablesStack.pop_back();
+		break;
 	}
 }
 
@@ -860,15 +891,15 @@ void Manager::doFunction(const std::string &expression) {
 	function->setArgValue(parameter);
 
 	//execute function body
-	function->setCallingPoint(scanner.getLinenumber(tableIndex));
+	function->setCallingPoint(scanner->getLinenumber(tableIndex));
 	insideFunction = true;
 
 	//loop function body. 
 	std::string linenumber = "";
-	int startIndex = scanner.getIndex(std::stoi(function->getLinenumberStart()));
-	int endIndex = scanner.getIndex(std::stoi(function->getLinenumberEnd()));
+	int startIndex = scanner->getIndex(std::stoi(function->getLinenumberStart()));
+	int endIndex = scanner->getIndex(std::stoi(function->getLinenumberEnd()));
 	for (int i = startIndex; i != endIndex; i++) {
-		linenumber = scanner.getLinenumber(i);
+		linenumber = scanner->getLinenumber(i);
 		evalGOTO(linenumber);
 	}
 
@@ -878,7 +909,7 @@ void Manager::doFunction(const std::string &expression) {
 	var->setValue(function->getReturnValue());
 
 	//set table index to continue after function.
-	tableIndex = scanner.getIndex(std::stoi(function->getCallingPoint()));
+	tableIndex = scanner->getIndex(std::stoi(function->getCallingPoint()));
 
 	//clear memory since leaving function.
 	//empty function
@@ -899,7 +930,7 @@ void Manager::doFunction(const std::string &expression) {
 	}
 	else {
 		//datatype error, datatype no recognize.
-		errorHandler.updateLog("ERROR: 014");
+		errHandler.updateLog("ERROR: 014");
 	}
 
 	//check if variable exist on heap
@@ -927,6 +958,13 @@ bool Manager::isAFunction(const std::string expression) {
 	}
 
 	return false;
+}
+
+bool Manager::isValidInput(const std::string expression) {
+	bool isAlpha = std::regex_match(expression, std::regex("^[A-Za-z]+$"));
+	size_t foudnNumber = expression.find_first_not_of("0123456789.");
+	if (!isAlpha && foudnNumber != std::string::npos) { return false; }
+	return true;
 }
 
 int main() {
