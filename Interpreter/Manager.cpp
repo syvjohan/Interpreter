@@ -39,7 +39,7 @@ Manager::~Manager()
 }
 
 void Manager::init() {
-	scanner->readFile("instructions/1.4Instructions.txt"); //code file to be read from!
+	scanner->readFile("instructions/1.0Instructions.txt"); //code file to be read from!
 
 	for (tableIndex = 0; tableIndex != scanner->length(); tableIndex++) {
 		errHandler.setLineNumber(scanner->getLinenumber(tableIndex));
@@ -815,7 +815,7 @@ void Manager::endLoop() {
 	decrementNestedForLoops();
 	positionStackForScope = 0;
 	tableIndex = endLoopIndex;
-	variablesStack.clear(); //variablesStack.pop_back();
+	variablesStack.clear();
 
 	return table(key, value);
 }
@@ -970,8 +970,13 @@ bool Manager::isAFunction(const std::string expression) {
 
 bool Manager::isValidInput(const std::string expression) {
 	bool isAlpha = std::regex_match(expression, std::regex("^[A-Za-z]+$"));
-	size_t foudnNumber = expression.find_first_not_of("0123456789.");
-	if (!isAlpha && foudnNumber != std::string::npos) { return false; }
+	size_t foundNumber = expression.find_first_not_of("0123456789.");
+	if (!isAlpha && foundNumber != std::string::npos) { 
+		return false; 
+	}
+	else if (foundNumber < 0) {
+		errHandler.updateLog("ERROR: 004");
+	}
 	return true;
 }
 
