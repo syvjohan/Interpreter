@@ -194,6 +194,8 @@ std::string LET::subdivideValue(const std::string &expression) {
 					std::string lhs = expr.substr(beforeOp +1, k - beforeOp -1);
 					float lNumber = atof(lhs.c_str());
 
+					if (!isSameDatatype(rhs, lhs)) { errHandler.updateLog("ERROR: 000"); }
+
 					// find rest right.
 					if (closeParanthes == nextOp) {
 						restRight = "";
@@ -266,6 +268,8 @@ std::string LET::subdivideValue(const std::string &expression) {
 					//find left value.
 					std::string lhs = expr.substr(beforeOp, k - beforeOp);
 					float lNumber = atof(lhs.c_str());
+
+					if (!isSameDatatype(rhs, lhs)) { errHandler.updateLog("ERROR: 000"); }
 
 					// find rest right.
 					if (nextOp != expr.length()) {
@@ -437,6 +441,23 @@ bool LET::prioritiesOperator(char op, int priority) {
 	}
 	else if (priority == 2) {
 		return op == '+' || op == '-';
+	}
+
+	return false;
+}
+
+bool LET::isSameDatatype(const std::string str1, const std::string str2) {
+	size_t isDigit1 = str1.find_first_not_of(".0123456789");
+	bool isAlpha1 = std::regex_match(str1, std::regex("^[A-Za-z]+$"));
+
+	size_t isDigit2 = str2.find_first_not_of(".0123456789");
+	bool isAlpha2 = std::regex_match(str2, std::regex("^[A-Za-z]+$"));
+
+	if (isDigit1 && isDigit2) {
+		return true;
+	}
+	else if (isAlpha1 && isAlpha2) {
+		return true;
 	}
 
 	return false;

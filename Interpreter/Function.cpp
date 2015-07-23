@@ -3,6 +3,10 @@
 Function::Function() {
 	data = DBG_NEW FunctionData();
 	initializeValues();
+	argsLen = 3;
+	argsDatatype[0] = "int";
+	argsDatatype[1] = "dec";
+	argsDatatype[2] = "str";
 }
 
 Function::Function(const std::string expression, ErrorHandler *errHandler) : Function()
@@ -22,20 +26,7 @@ Function::Function(const Function &obj) {
 void Function::initializeValues() {
 	data->functionName = "";
 
-	data->argsContainer = NULL;
-	data->argsCapacity = 10;
-	data->argsLen = 0;
-
-	data->varLen = 0;
-	data->varCapacity = 10;
-	data->varContainer = DBG_NEW LET[data->varCapacity];
-
 	data->callingPoint = "";
-
-	data->datatypesLen = 3;
-	data->datatypes[0] = "int";
-	data->datatypes[1] = "dec";
-	data->datatypes[2] = "str";
 
 	data->linenumberEnd = -1;
 	data->linenumberStart = -1;
@@ -62,99 +53,176 @@ void Function::identifyPartsInHead(const std::string &expression) {
 	}
 
 	//find args
-	std::string args = expr.substr(findOpenParanthes + 1, findCloseParanthes - findOpenParanthes - 1);
+	std::string getArgs = expr.substr(findOpenParanthes + 1, findCloseParanthes - findOpenParanthes - 1);
+	//if args exist.
+	if (getArgs != "") {
+		//Assume there is more then 1 arg get there position.
+		std::vector<std::pair<std::string, std::string>> args;
+		std::string tmp = getArgs;
+		std::string name = "";
+		for (int i = 0; i != tmp.length(); i++) {
 
-	std::string argName = args.substr(3, args.length() - 3);
+			size_t findINT = tmp.find("int");
+			size_t findSTR = tmp.find("str");
+			size_t findDEC = tmp.find("dec");
 
-	//get datatype.
-	size_t findInt = args.find("int");
-	size_t findStr = args.find("str");
-	size_t findDec = args.find("dec");
+			if (findINT < findSTR && findINT < findDEC) {
+				tmp.erase(findINT, 3);
 
-	std::string defaultValue = "";
-	int datatype = 0;
-	if (findInt != std::string::npos) {
-		addArg(argName, defaultValue = "0", datatype = 1);
-	}
-	else if (findStr != std::string::npos) {
-		addArg(argName, defaultValue = "", datatype = 3);
-	}
-	else if (findDec != std::string::npos) {
-		addArg(argName, defaultValue = "0", datatype = 2);
-	}
-	else {
-		//error in syntax datatype is missing...
-		errHandler.updateLog("ERROR: 014");
-		return;
+				size_t findInt = tmp.find("int");
+				size_t findStr = tmp.find("str");
+				size_t findDec = tmp.find("dec");
+				if (findInt < findStr && findInt < findDec) {
+					name = tmp.substr(0, findInt);
+				}
+				else if (findStr < findInt && findStr < findDec) {
+					name = tmp.substr(0, findStr);
+				}
+				else if (findDec < findStr && findDec < findInt) {
+					name = tmp.substr(0, findDec);
+				}
+				else {
+					name = tmp;
+				}
+
+				tmp.erase(0, name.length());
+				args.push_back(std::make_pair(name, "int"));
+			}
+			else if (findDEC < findSTR && findDEC < findINT) {
+				tmp.erase(findDEC, 3);
+
+				size_t findInt = tmp.find("int");
+				size_t findStr = tmp.find("str");
+				size_t findDec = tmp.find("dec");
+				if (findInt < findStr && findInt < findDec) {
+					name = tmp.substr(0, findInt);
+				}
+				else if (findStr < findInt && findStr < findDec) {
+					name = tmp.substr(0, findStr);
+				}
+				else if (findDec < findStr && findDec < findInt) {
+					name = tmp.substr(0, findDec);
+				}
+				else {
+					name = tmp;
+				}
+
+				tmp.erase(0, name.length());
+				args.push_back(std::make_pair(name, "dec"));
+			}
+			else if (findSTR < findINT && findSTR < findDEC) {
+				tmp.erase(findSTR, 3);
+
+				size_t findInt = tmp.find("int");
+				size_t findStr = tmp.find("str");
+				size_t findDec = tmp.find("dec");
+				if (findInt < findStr && findInt < findDec) {
+					name = tmp.substr(0, findInt);
+				}
+				else if (findStr < findInt && findStr < findDec) {
+					name = tmp.substr(0, findStr);
+				}
+				else if (findDec < findStr && findDec < findInt) {
+					name = tmp.substr(0, findDec);
+				}
+				else {
+					name = tmp;
+				}
+
+				tmp.erase(0, name.length());
+				args.push_back(std::make_pair(name, "str"));
+			}
+			else {
+				errHandler.updateLog("ERROR: 018");
+			}
+
+			i = -1;
+		}
+		
+		for (int i = 0; i != args.size(); i++) {
+			std::string defaultValue = "";
+			int datatype = 0;
+			if (args[i].second == "int") {
+				addArg(args[i].first, defaultValue = "0", datatype = 1);
+			}
+			else if (args[i].second == "str") {
+				addArg(args[i].first, defaultValue = "", datatype = 3);
+			}
+			else if (args[i].second == "dec") {
+				addArg(args[i].first, defaultValue = "0", datatype = 2);
+			}
+			else {
+				//error in syntax datatype is missing...
+				errHandler.updateLog("ERROR: 014");
+				return;
+			}
+		}
 	}
 }
 
 bool Function::addVariable(const std::string &name, const std::string &value, const int &datatype) {
-	if (name == "" || value == "" || datatype == 0) {
-		errHandler.updateLog("ERROR: 013");
+	if (!datatype == 3 && name != "") {
+		if (name == "" || value == "" || datatype == 0) {
+			errHandler.updateLog("ERROR: 013");
+		}
 	}
 
-	std::string n = name;
-	std::string v = value;
-	int d = datatype;
-
-	int isExistVar = doVarExist(name, data->varContainer, data->varLen);
-	int isExistArg = doVarExist(name, data->argsContainer, data->argsLen);
+	int isExistVar = doVarExist(name, data->varContainer);
+	int isExistArg = doVarExist(name, data->argsContainer);
 	if (isExistVar != -1) {
-		data->varContainer[isExistVar].setDataType(d);
-		data->varContainer[isExistVar].setValue(v);
+		data->varContainer[isExistVar].setDataType(datatype);
+		data->varContainer[isExistVar].setValue(value);
 		return true;
 	}
 	else if (isExistArg != -1) {
+		errHandler.updateLog("ERROR: 030");
 		return false;
 	}
 
-	data->varContainer = DBG_NEW LET();
+	//create a new variable to insert
+	LET var;
+	var.setName(name);
+	var.setDataType(datatype);
+	var.setValue(value);
 
-	data->varContainer->setName(n);
-	data->varContainer->setDataType(d);
-	data->varContainer->setValue(v);
-
-	data->varLen++;
+	data->varContainer.push_back(var);
 
 	return true;
 }
 
 bool Function::addArg(const std::string &name, const std::string &value, const int &datatype) {
-	if (name == "" || value == "" || datatype == 0) {
-		errHandler.updateLog("ERROR: 013");
+	if (!datatype == 3 && name != "") {
+		if (name == "" || value == "" || datatype == 0) {
+			errHandler.updateLog("ERROR: 013");
+		}
 	}
-	std::string n = name;
-	std::string v = value;
-	int d = datatype;
-
-	int isExistVar = doVarExist(name, data->varContainer, data->varLen);
-	int isExistArg = doVarExist(name, data->argsContainer, data->argsLen);
-
-	if (data->argsContainer == nullptr) {
-		data->argsContainer = DBG_NEW LET();
-	}
+	
+	int isExistVar = doVarExist(name, data->varContainer);
+	int isExistArg = doVarExist(name, data->argsContainer);
 
 	if (isExistArg != -1) {
-		data->varContainer[isExistArg].setDataType(d);
-		data->varContainer[isExistArg].setValue(v);
+		data->varContainer[isExistArg].setDataType(datatype);
+		data->varContainer[isExistArg].setValue(value);
 		return true;
 	}
 	else if (isExistVar != -1) {
+		errHandler.updateLog("ERROR: 030");
 		return false;
 	}
 
-	data->argsContainer->setName(n);
-	data->argsContainer->setDataType(d);
-	data->argsContainer->setValue(v);
+	//create a new variable to insert
+	LET var;
+	var.setName(name);
+	var.setDataType(datatype);
+	var.setValue(value);
 
-	data->argsLen++;
+	data->argsContainer.push_back(var);
 
 	return true;
 }
 
-int Function::doVarExist(std::string name, LET *container, int size) {
-	for (int i = 0; i != size; i++) {
+int Function::doVarExist(std::string name, std::vector<LET> container) {
+	for (int i = 0; i != container.size(); i++) {
 		if (name == container[i].getName()) {
 			return i;
 		}
@@ -165,14 +233,14 @@ int Function::doVarExist(std::string name, LET *container, int size) {
 LET Function::getVariableByName(const std::string &name) {
 	LET variable;
 	if (data != nullptr) {
-		for (int i = 0; i != data->varLen; i++) {
+		for (int i = 0; i != data->varContainer.size(); i++) {
 			if (data->varContainer[i].getName() == name) {
 				return data->varContainer[i];
 			}
 		}
 
-		for (int i = 0; i != data->argsLen; i++) {
-			if (data->argsContainer->getName() == name) {
+		for (int i = 0; i != data->argsContainer.size(); i++) {
+			if (data->argsContainer[i].getName() == name) {
 				return data->argsContainer[i];
 			}
 		}
@@ -185,20 +253,11 @@ LET Function::getVariableByName(const std::string &name) {
 
 //Observe function does not erase function name.
 Function& Function::eraseBodyContent(Function &function) {
-	function.data->argsContainer = NULL;
-	function.data->argsCapacity = 10;
-	function.data->argsLen = 0;
+	function.data->argsContainer.clear();
 
-	function.data->varLen = 0;
-	function.data->varCapacity = 10;
-	function.data->varContainer = DBG_NEW LET[data->varCapacity];
+	function.data->varContainer.clear();
 
 	function.data->callingPoint = "";
-
-	function.data->datatypesLen = 3;
-	function.data->datatypes[0] = "int";
-	function.data->datatypes[1] = "dec";
-	function.data->datatypes[2] = "str";
 
 	function.data->linenumberEnd = -1;
 	function.data->linenumberStart = -1;
@@ -224,8 +283,9 @@ std::string Function::getFunctionName() const {
 	return data->functionName;
 }
 
-void Function::setArgValue(const std::string value) {
-	data->argsContainer->setValue(value);
+void Function::setArgValue(int pos, const std::string value) {
+	if (pos > data->argsContainer.size()) { return errHandler.updateLog("ERROR: 031"); }
+	data->argsContainer[pos].setValue(value);
 }
 
 std::string Function::getLinenumberStart() const {
@@ -250,4 +310,8 @@ void Function::setReturnValue(const std::string &value) {
 
 std::string Function::getReturnValue() const {
 	return data->returnValue;
+}
+
+int Function::getArgLen() const {
+	return data->argsContainer.size();
 }

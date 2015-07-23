@@ -1,4 +1,4 @@
-10 DEFINE sqr ( int x )
+10 DEFINE sqr (int x)
 20 INT res
 30 LET res = x * x
 40 RETURN res

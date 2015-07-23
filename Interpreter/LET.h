@@ -51,5 +51,6 @@ private:
 	bool isNumber(const std::string str);
 	std::string transformKeywordsToValues(const std::string &str);
 	void transformValueAfterDatatype();
+	bool isSameDatatype(const std::string str1, const std::string str2);
 };
 

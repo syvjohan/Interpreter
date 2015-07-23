@@ -39,7 +39,7 @@ Manager::~Manager()
 }
 
 void Manager::init() {
-	scanner->readFile("instructions/1.3Instructions.txt"); //code file to be read from!
+	scanner->readFile("instructions/1.4Instructions.txt"); //code file to be read from!
 
 	for (tableIndex = 0; tableIndex != scanner->length(); tableIndex++) {
 		errHandler.setLineNumber(scanner->getLinenumber(tableIndex));
@@ -878,17 +878,25 @@ void Manager::doFunction(const std::string &expression) {
 	//get function parameter
 	std::string parameter = expr.substr(foundOpenParanthes +1, foundCloseParanthes - foundOpenParanthes -1);
 	//get function parameter value.
+	std::vector<std::pair<size_t, std::string>> args;
 	for (int i = 0; i != variablesHeap.size(); i++) {
-		if (parameter == variablesHeap[i].getName()) {
-			parameter = variablesHeap[i].getValue();
+		size_t findarg = parameter.find(variablesHeap[i].getName());
+		if (findarg != std::string::npos) {
+			args.push_back(std::make_pair(findarg, variablesHeap[i].getValue()));
 		}
+	}
+
+	if (function->getArgLen() > args.size() || function->getArgLen() < args.size()) { errHandler.updateLog("ERROR: 031"); }
+
+	//Sort arg position.
+	std::sort(std::begin(args), std::end(args));
+	for (int i = 0; i != args.size(); i++) {
+		//set new parameter value.
+		function->setArgValue(i, args[i].second);
 	}
 
 	//get function name
 	std::string functionName = expr.substr(foundOpEqual +1, foundOpenParanthes - foundOpEqual -1);
-
-	//set new parameter value.
-	function->setArgValue(parameter);
 
 	//execute function body
 	function->setCallingPoint(scanner->getLinenumber(tableIndex));

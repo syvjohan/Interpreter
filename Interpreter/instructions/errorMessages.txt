@@ -28,3 +28,5 @@ ERROR: 026, Reading input file, found that Linenumber not specified.
 ERROR: 027, expression is missing.
 ERROR: 028, keyword is missing.
 ERROR: 029, Unsupported datatype.
+ERROR: 030, Duplicated variable name,
+ERROR: 031, number of argument(s) in parameterlist is wrong.

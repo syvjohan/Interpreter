@@ -20,7 +20,7 @@ public:
 
 	void setFunctionName(const std::string &name);
 
-	void setArgValue(const std::string value);
+	void setArgValue(int pos, const std::string value);
 
 	void setLineNumberStart(const int start);
 	void setLineNumberEnd(const int end);
@@ -35,31 +35,27 @@ public:
 	std::string getLinenumberStart() const;
 	std::string getLinenumberEnd() const;
 	std::string getCallingPoint() const;
+	int getArgLen() const;
 
 	std::string getReturnValue() const;
 
 	void removeVariable(const LET &variable);
-	int doVarExist(std::string name, LET *container, int size);
+	int doVarExist(std::string name, std::vector<LET> container);
 	Function& eraseBodyContent(Function &function);
 
 private:
 
 	ErrorHandler errHandler;
+	std::string argsDatatype[3];
+	int argsLen;
 
 	struct FunctionData
 	{
 		std::string functionName;
 
-		LET *varContainer;
-		int varLen;
-		int varCapacity;
+		std::vector<LET> varContainer;
 
-		LET *argsContainer;
-		int argsLen;
-		int argsCapacity;
-
-		std::string datatypes[3];
-		int datatypesLen;
+		std::vector<LET> argsContainer;
 
 		int linenumberStart;
 		int linenumberEnd;
