@@ -79,7 +79,7 @@ void LET::identifyPartsInExpression(const std::string &expression) {
 		//find datatype. DEFINED DATATYPES
 		bool hasDefinedDatatype = false;
 		size_t typeInt = expr.find("INT");
-		size_t typeFloat = expr.find("FLOAT");
+		size_t typeFloat = expr.find("DEC");
 		size_t typeString = expr.find("STR");
 		int datatype = 0;
 		if (typeInt != std::string::npos) {
@@ -89,7 +89,7 @@ void LET::identifyPartsInExpression(const std::string &expression) {
 		}
 		else if (typeFloat != std::string::npos) {
 			setDataType(datatype = 2); //FLOAT
-			expr.erase(typeFloat, 5);
+			expr.erase(typeFloat, 3);
 			hasDefinedDatatype = true;
 		}
 		else if (typeString != std::string::npos) {
@@ -186,15 +186,12 @@ std::string LET::subdivideValue(const std::string &expression) {
 						}
 					}
 
-					//find right value.
-					std::string rhs = expr.substr(k +1, nextOp - k -1);
-					float rNumber = atof(rhs.c_str());
-
-					//find left value.
-					std::string lhs = expr.substr(beforeOp +1, k - beforeOp -1);
-					float lNumber = atof(lhs.c_str());
+					std::string rhs = expr.substr(k + 1, nextOp - k - 1); //find right value.
+					std::string lhs = expr.substr(beforeOp + 1, k - beforeOp - 1); //find left value.
 
 					if (!isSameDatatype(rhs, lhs)) { errHandler.updateLog("ERROR: 000"); }
+					std::string result = doCalc(rhs, validateOperator(expr.at(k)), lhs);
+					
 
 					// find rest right.
 					if (closeParanthes == nextOp) {
@@ -215,15 +212,11 @@ std::string LET::subdivideValue(const std::string &expression) {
 						restLeft = expr.substr(openParanthes, beforeOp);
 					}
 
-					//calculate the values
-					float result = doCalc(lNumber, validateOperator(expr.at(k)), rNumber);
-					std::string tmpResult = std::to_string(result);
-
 					// create the new expression.
 					expr = "";
 					expr.append(restBeforeParanthesis);
 					expr.append(restLeft);
-					expr.append(tmpResult);
+					expr.append(result);
 					expr.append(restRight);
 					expr.append(restAfterParanthesis);
 
@@ -260,16 +253,13 @@ std::string LET::subdivideValue(const std::string &expression) {
 						}
 					}
 
-					//find right value.
 					int v1 = nextOp;
-					std::string rhs = expr.substr(k + 1, v1 - k -1);
-					float rNumber = atof(rhs.c_str());
-
-					//find left value.
-					std::string lhs = expr.substr(beforeOp, k - beforeOp);
-					float lNumber = atof(lhs.c_str());
+					std::string rhs = expr.substr(k + 1, v1 - k -1); //find right value.
+					std::string lhs = expr.substr(beforeOp, k - beforeOp); //find left value.
 
 					if (!isSameDatatype(rhs, lhs)) { errHandler.updateLog("ERROR: 000"); }
+
+					std::string result = doCalc(rhs, validateOperator(expr.at(k)), lhs); //calculate the values
 
 					// find rest right.
 					if (nextOp != expr.length()) {
@@ -283,16 +273,11 @@ std::string LET::subdivideValue(const std::string &expression) {
 					else {
 						restLeft = expr.substr(0, beforeOp);
 					}
-					
-
-					//calculate the values
-					float result = doCalc(lNumber, validateOperator(expr.at(k)), rNumber);
-					std::string tmpResult = std::to_string(result);
 
 					// create the new expression.
 					expr = "";
 					expr.append(restLeft);
-					expr.append(tmpResult);
+					expr.append(result);
 					expr.append(restRight);
 
 					//Check if there is more to calculate.
@@ -348,11 +333,35 @@ float LET::generateRandomNumber() {
 	return (rand() / (float)(RAND_MAX + 1));
 }
 
-float LET::doCalc(float value1, char op, float value2) {
-	float result = 0.0f;
-	if (value1 == 0) return value2;
-	if (value2 == 0) return value1;
-	switch (op) {
+std::string LET::doCalc(const std::string &str2, const char &op, const std::string &str1) {
+	//check if it is a string str
+	bool rhsIsAlpha = std::regex_match(str1, std::regex("^[A-Za-z]+$"));
+	bool lhsIsAlpha = std::regex_match(str2, std::regex("^[A-Za-z]+$"));
+	std::string resultStr = "";
+	if (rhsIsAlpha && lhsIsAlpha && str1 != "" && str2 != "") {
+		switch (op) {
+		case '*':
+			resultStr = "";
+			break;
+		case '/':
+			resultStr = "";
+			break;
+		case '+':
+			resultStr = str1 + str2;
+			break;
+		case '-':
+			resultStr = "";
+			break;
+		}
+	}
+	else {
+		float value1 = atof(str1.c_str());
+		float value2 = atof(str2.c_str());
+
+		float result = 0.0f;
+		if (value1 == 0) return std::to_string(value2);
+		if (value2 == 0) return std::to_string(value1);
+		switch (op) {
 		case '*':
 			result = value1 * value2;
 			break;
@@ -365,9 +374,16 @@ float LET::doCalc(float value1, char op, float value2) {
 		case '-':
 			result = value1 - value2;
 			break;
+		}
+
+		resultStr = std::to_string(result);
+		size_t findNegValue = resultStr.find('-');
+		if (findNegValue != std::string::npos) {
+			errHandler.updateLog("ERROR: 004");
+		}
 	}
 
-	return result;
+	return resultStr;
 }
 
 bool LET::isNumber(const std::string str) {

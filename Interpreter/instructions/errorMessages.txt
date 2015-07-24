@@ -2,7 +2,7 @@ ERROR: 000, Cannot compare digits with letters.
 ERROR: 001, Variable does not exist.
 ERROR: 002, Linenumber does not exist.
 ERROR: 003, Cannot identify keyword.
-ERROR: 004, Interpreter has no support for negative numbers.
+ERROR: 004, Interpreter has no support for negative numbers (includes calculating positive numbers there the result is negative).
 ERROR: 005, Missing value.
 ERROR: 006, Missing name.
 ERROR: 007, Variable does not exist on Stack.

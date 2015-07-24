@@ -1,4 +1,4 @@
-﻿Build started 7/23/2015 9:27:34 PM.
+﻿Build started 7/24/2015 3:36:41 PM.
      1>Project "C:\Programmering\Interpreter\Interpreter\Interpreter.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _CRT_SECURE_NO_WARNINGS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Manager.cpp

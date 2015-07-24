@@ -62,3 +62,8 @@ Error message will be deleted on program startup.
 Setup:
 Clone project https://github.com/syvjohan/Interpreter.git
 If you have Visual studio go to Interpreter/Interpreter/Interpreter.vcxproj and "double click".
+To change input file goto Manager.cpp line 42. There is four existing input files in Interpreter/Interpreter/instructions.
+In Manager.cpp line 85 in the else if condition for END command there has been set an sleep for 5 seconds this is used for debugging,
+delete the line or set time to a desired value.
+
+Enjoy!!!

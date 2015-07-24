@@ -40,7 +40,7 @@ private:
 	bool prioritiesOperator(char op, int priority);
 
 	float generateRandomNumber();
-	float doCalc(float value1, char op, float value2);
+	std::string doCalc(const std::string &str1, const char &op, const std::string &str2);
 
 	std::string subdivideValue(const std::string &expression);
 	void setDefaultValue();

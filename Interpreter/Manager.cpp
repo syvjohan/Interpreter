@@ -39,7 +39,7 @@ Manager::~Manager()
 }
 
 void Manager::init() {
-	scanner->readFile("instructions/1.0Instructions.txt"); //code file to be read from!
+	scanner->readFile("instructions/1.3Instructions.txt"); //code file to be read from!
 
 	for (tableIndex = 0; tableIndex != scanner->length(); tableIndex++) {
 		errHandler.setLineNumber(scanner->getLinenumber(tableIndex));
@@ -82,7 +82,7 @@ void Manager::table(const std::string keyword, const std::string expression) {
 		evalGOTO(expression);
 	}
 	else if (keyword == "END") {
-		std::this_thread::sleep_for(std::chrono::milliseconds(500));
+		std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 		exit(0);
 	}
 	else if (keyword == "FOR") {
@@ -570,7 +570,7 @@ std::string Manager::exchangeVariableNameToValue(const std::string expression) {
 
 				// check for typecast datatype.
 				size_t typeInt = lhs.find("INT");
-				size_t typeFloat = lhs.find("FLOAT");
+				size_t typeFloat = lhs.find("DEC");
 				size_t typeString = lhs.find("STR");
 				std::string typecast = "";
 				if (typeInt != std::string::npos) {
@@ -579,11 +579,11 @@ std::string Manager::exchangeVariableNameToValue(const std::string expression) {
 				}
 				else if (typeString != std::string::npos) {
 					typecast = lhs.substr(typeString, 3);
-					lhs.erase(typeInt, 3);
+					lhs.erase(typeString, 3);
 				}
 				else if (typeFloat != std::string::npos) {
-					typecast = lhs.substr(typeFloat, 5);
-					lhs.erase(typeFloat, 5);
+					typecast = lhs.substr(typeFloat, 3);
+					lhs.erase(typeFloat, 3);
 				}
 
 				//if lhs contains operators remove them.
