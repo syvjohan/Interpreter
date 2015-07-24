@@ -41,8 +41,8 @@ Support comparison between INT to INT, FLOAT to FLOAT,
 FLOAT to INT and STR to STR.
 < and > operators for STR compare the string length.
 
-Supported Arithmetic Operators for digits is +, -, /, *
-To append one string after another use + operator.
+Supported Arithmetic Operators for digits is +, -, /, *.
+To append one string after another use the + operator.
 
 RANDOM generates a random number between 0 and 1,
 
